@@ -23,14 +23,15 @@ object Versions {
     const val lifecycleRuntimeKtx = "2.6.1"
     const val composeViewModel = "2.5.1"
     const val composeNavigation = "2.6.0-alpha08"
+    const val composePagerLayouts = "0.30.0"
 }
 
 object Modules {
     const val core = ":core"
     const val homeScreen = ":home_screen"
-    const val searchScreen = ":search_screen"
-    const val favoriteScreen = ":favorite_screen"
     const val descriptionScreen = ":description_screen"
+    const val interactors = ":interactors"
+    const val models = ":models"
 }
 
 object Android {
@@ -41,6 +42,7 @@ object Compose {
     const val activityCompose = "androidx.activity:activity-compose:${Versions.activityCompose}"
     const val composeBom = "androidx.compose:compose-bom:${Versions.composeBom}"
     const val composeUI = "androidx.compose.ui:ui"
+    const val composeUIUtil = "androidx.compose.ui:ui-util"
     const val composeUiGraphics = "androidx.compose.ui:ui-graphics"
     const val composePreview = "androidx.compose.ui:ui-tooling-preview"
     const val composeMaterial = "androidx.compose.material3:material3"
@@ -50,6 +52,7 @@ object Compose {
     const val composeViewModel = "androidx.lifecycle:lifecycle-viewmodel-compose:${Versions.composeViewModel}"
     const val composeLiveData = "androidx.compose.runtime:runtime-livedata"
     const val composeNavigation = "androidx.navigation:navigation-compose:${Versions.composeNavigation}"
+    const val composePagerLayouts = "com.google.accompanist:accompanist-pager:${Versions.composePagerLayouts}"
 }
 
 object Tests {

@@ -37,8 +37,6 @@ android {
 dependencies {
     implementation project(Modules.core)
     implementation project(Modules.homeScreen)
-    implementation project(Modules.searchScreen)
-    implementation project(Modules.favoriteScreen)
     implementation project(Modules.descriptionScreen)
     implementation Android.ktxCore
     implementation Compose.activityCompose

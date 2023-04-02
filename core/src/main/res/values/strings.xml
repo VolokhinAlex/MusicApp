@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home_screen">Home</string>
-    <string name="favorite_screen">Favorite</string>
-    <string name="search_screen">Search</string>
     <string name="description_screen">Description Music</string>
 </resources>
