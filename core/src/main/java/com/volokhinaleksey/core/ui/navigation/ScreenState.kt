@@ -23,18 +23,6 @@ sealed class ScreenState(
     object HomeScreen :
         ScreenState(route = "home_screen", label = R.string.home_screen, icon = Icons.Outlined.Home)
 
-    object FavoriteScreen : ScreenState(
-        route = "favorite_screen",
-        label = R.string.favorite_screen,
-        icon = Icons.Outlined.Favorite
-    )
-
-    object SearchScreen : ScreenState(
-        route = "search_screen",
-        label = R.string.search_screen,
-        icon = Icons.Outlined.Search
-    )
-
     object DescriptionMusicScreen : ScreenState(
         route = "description_screen",
         label = R.string.description_screen,

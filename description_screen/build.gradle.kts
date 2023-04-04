@@ -30,6 +30,7 @@ android {
 }
 
 dependencies {
+    implementation(project(Modules.core))
     implementation(Android.ktxCore)
     implementation(Compose.composeNavigation)
     implementation(Compose.composeViewModel)

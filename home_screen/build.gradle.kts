@@ -26,11 +26,15 @@ android {
 }
 
 dependencies {
+    implementation(project(Modules.core))
     implementation(Android.ktxCore)
     implementation(Compose.composeViewModel)
     implementation(platform(Compose.composeBom))
+    implementation(Compose.composePagerLayouts)
+    implementation(Compose.composeUIUtil)
     implementation(Compose.composeUI)
     implementation(Compose.composeUiGraphics)
+    implementation(Compose.composeNavigation)
     implementation(Compose.composePreview)
     implementation(Compose.composeMaterial)
     testImplementation(Tests.junit)
