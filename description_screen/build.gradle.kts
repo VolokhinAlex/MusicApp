@@ -27,10 +27,17 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    buildFeatures {
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.4.0"
+    }
 }
 
 dependencies {
     implementation(project(Modules.core))
+    implementation(project(Modules.models))
     implementation(Android.ktxCore)
     implementation(Compose.composeNavigation)
     implementation(Compose.composeViewModel)
@@ -40,6 +47,10 @@ dependencies {
     implementation(Compose.composeUiGraphics)
     implementation(Compose.composePreview)
     implementation(Compose.composeMaterial)
+    implementation(Koin.koinCore)
+    implementation(Koin.koinAndroid)
+    implementation(Koin.koinAndroidCompat)
+    implementation(Koin.koinCompose)
     testImplementation(Tests.junit)
     androidTestImplementation(Tests.extJunit)
     androidTestImplementation(Tests.espresso)

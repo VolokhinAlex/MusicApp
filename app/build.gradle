@@ -32,20 +32,34 @@ android {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
+    buildFeatures {
+        compose true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = '1.4.0'
+    }
 }
 
 dependencies {
     implementation project(Modules.core)
     implementation project(Modules.homeScreen)
     implementation project(Modules.descriptionScreen)
+    implementation project(Modules.models)
+    implementation project(Modules.interactors)
+    implementation project(Modules.repositories)
+    implementation project(Modules.datasource)
     implementation Android.ktxCore
     implementation Compose.activityCompose
     implementation platform(Compose.composeBom)
     implementation Compose.composeNavigation
     implementation Compose.composeUI
+    implementation Compose.composePermission
     implementation Compose.composeUiGraphics
     implementation Compose.composePreview
     implementation Compose.composeMaterial
+    implementation Koin.koinCore
+    implementation Koin.koinAndroid
+    implementation Koin.koinAndroidCompat
     testImplementation Tests.junit
     androidTestImplementation Tests.extJunit
     androidTestImplementation Tests.espresso

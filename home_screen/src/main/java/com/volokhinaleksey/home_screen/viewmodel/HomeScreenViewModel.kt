@@ -1,6 +1,20 @@
 package com.volokhinaleksey.home_screen.viewmodel
 
-import androidx.lifecycle.ViewModel
+import com.volokhinaleksey.core.base.BaseViewModel
+import com.volokhinaleksey.interactors.home.HomeInteractor
+import com.volokhinaleksey.models.states.TrackState
 
-class HomeScreenViewModel : ViewModel() {
+class HomeScreenViewModel(
+    private val homeInteractor: HomeInteractor
+) : BaseViewModel<TrackState>() {
+
+    init {
+        getSongsFromRepository()
+    }
+
+    private fun getSongsFromRepository() {
+        mutableData.value = TrackState.Loading
+        mutableData.value = homeInteractor.getSongs()
+    }
+
 }

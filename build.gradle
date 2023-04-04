@@ -27,12 +27,6 @@ subprojects {
                     sourceCompatibility Config.INSTANCE.javaVersion
                     targetCompatibility Config.INSTANCE.javaVersion
                 }
-                buildFeatures {
-                    compose true
-                }
-                composeOptions {
-                    kotlinCompilerExtensionVersion '1.4.0'
-                }
             }
         }
     }
