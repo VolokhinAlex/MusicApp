@@ -14,3 +14,9 @@ dependencyResolutionManagement {
 }
 rootProject.name = "MusicApp"
 include ':app'
+
+include ':core'
+include ':home_screen'
+include ':search_screen'
+include ':favorite_screen'
+include ':description_screen'
