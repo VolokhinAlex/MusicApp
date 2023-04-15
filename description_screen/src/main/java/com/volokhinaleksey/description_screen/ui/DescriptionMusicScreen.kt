@@ -30,12 +30,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.volokhinaleksey.core.R
+import com.volokhinaleksey.core.utils.durationConvert
+import com.volokhinaleksey.models.local.Track
 
 @Composable
-fun DescriptionMusicScreen() {
+fun DescriptionMusicScreen(track: Track, navController: NavController) {
 
     Column(
         modifier = Modifier
@@ -52,7 +57,7 @@ fun DescriptionMusicScreen() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
-                onClick = { }
+                onClick = { navController.popBackStack() }
             ) {
                 Icon(
                     imageVector = Icons.Filled.KeyboardArrowDown,
@@ -61,7 +66,11 @@ fun DescriptionMusicScreen() {
                 )
             }
 
-            Text(text = "Music title", fontSize = 18.sp, color = Color.Black)
+            Text(
+                text = "${track.title}", fontSize = 18.sp, color = Color.Black, maxLines = 1,
+                overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth(0.7f),
+                textAlign = TextAlign.Center
+            )
 
             IconButton(
                 onClick = { }
@@ -86,8 +95,18 @@ fun DescriptionMusicScreen() {
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Author name", fontSize = 20.sp, color = Color.Black)
-            Text(text = "Music title", fontSize = 25.sp, color = Color.Black)
+            Text(
+                text = "${track.title}",
+                fontSize = 25.sp,
+                color = Color.Black,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = if (track.artist.equals("<unknown>")) "Unknown artist" else "${track.artist}",
+                fontSize = 20.sp,
+                color = Color.Black,
+                textAlign = TextAlign.Center
+            )
             Column {
                 Slider(value = sliderPosition, onValueChange = { sliderPosition = it })
                 Row(
@@ -95,7 +114,11 @@ fun DescriptionMusicScreen() {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(text = "00:00", fontSize = 15.sp, color = Color.Black)
-                    Text(text = "01:42", fontSize = 15.sp, color = Color.Black)
+                    Text(
+                        text = durationConvert(track.duration ?: 0),
+                        fontSize = 15.sp,
+                        color = Color.Black
+                    )
                 }
             }
             Row(modifier = Modifier.padding(0.dp, 20.dp)) {

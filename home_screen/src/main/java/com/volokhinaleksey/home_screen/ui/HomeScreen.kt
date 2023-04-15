@@ -1,5 +1,6 @@
 package com.volokhinaleksey.home_screen.ui
 
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -24,22 +26,47 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
+import androidx.core.os.bundleOf
 import androidx.navigation.NavController
+import com.volokhinaleksey.core.base.BaseViewModel
+import com.volokhinaleksey.core.ui.navigation.DATA_KEY
 import com.volokhinaleksey.core.ui.navigation.ScreenState
+import com.volokhinaleksey.core.ui.navigation.navigate
 import com.volokhinaleksey.core.ui.widgets.CardMusic
+import com.volokhinaleksey.core.ui.widgets.SearchBar
+import com.volokhinaleksey.core.ui.widgets.rememberSearchState
+import com.volokhinaleksey.models.states.TrackState
+import org.koin.androidx.compose.koinViewModel
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(
+    homeScreenViewModel: BaseViewModel<TrackState> = koinViewModel(),
+    navController: NavController
+) {
+    val state = rememberSearchState()
     Column {
+
+        SearchBar(
+            query = state.query,
+            onQueryChange = { state.query = it },
+            onSearchFocusChange = { state.focused = it },
+            onClearQuery = { state.query = TextFieldValue("") },
+            onBack = { state.query = TextFieldValue("") },
+            searching = state.searching,
+            focused = state.focused
+        )
+
         Text(
             text = "Favorite Songs",
             color = Color.Black,
@@ -63,10 +90,27 @@ fun HomeScreen(navController: NavController) {
             modifier = Modifier.padding(20.dp)
         )
 
-        LazyColumn {
-            items(10) {
-                CardMusic {
-                    navController.navigate(route = ScreenState.DescriptionMusicScreen.route)
+        homeScreenViewModel.data.observeAsState().value?.let {
+            RenderData(state = it, navController = navController)
+        }
+    }
+}
+
+@Composable
+fun RenderData(state: TrackState, navController: NavController) {
+    when (state) {
+        is TrackState.Error -> {}
+        TrackState.Loading -> {}
+        is TrackState.Success -> {
+            val songs = state.tracks
+            LazyColumn {
+                itemsIndexed(songs) { _, item ->
+                    CardMusic(item) {
+                        navController.navigate(
+                            route = ScreenState.DescriptionMusicScreen.route,
+                            bundleOf(DATA_KEY to item)
+                        )
+                    }
                 }
             }
         }
