@@ -60,6 +60,10 @@ dependencies {
     implementation Koin.koinCore
     implementation Koin.koinAndroid
     implementation Koin.koinAndroidCompat
+    implementation ExoPlayer.exoPlayer
+    implementation ExoPlayer.exoPlayerDash
+    implementation ExoPlayer.exoPlayerUI
+    implementation ExoPlayer.exoPlayerSession
     testImplementation Tests.junit
     androidTestImplementation Tests.extJunit
     androidTestImplementation Tests.espresso
