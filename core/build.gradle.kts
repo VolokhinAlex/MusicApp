@@ -32,7 +32,10 @@ android {
 }
 
 dependencies {
+    implementation("androidx.legacy:legacy-support-v4:1.0.0")
     implementation(project(Modules.models))
+    implementation(Compose.composeUIUtil)
+    implementation(project(Modules.datasource))
     implementation(Android.ktxCore)
     implementation(Compose.composeNavigation)
     implementation(platform(Compose.composeBom))
@@ -41,6 +44,13 @@ dependencies {
     implementation(Compose.composeCoil)
     implementation(Compose.composePreview)
     implementation(Compose.composeMaterial)
+    implementation(ExoPlayer.exoPlayerUI)
+    implementation(ExoPlayer.exoPlayer)
+    implementation(ExoPlayer.exoPlayerSession)
+    implementation(Koin.koinCore)
+    implementation(Koin.koinAndroid)
+    implementation(Koin.koinAndroidCompat)
+    implementation(ExoPlayer.exoPlayerDash)
     testImplementation(Tests.junit)
     androidTestImplementation(Tests.extJunit)
     androidTestImplementation(Tests.espresso)

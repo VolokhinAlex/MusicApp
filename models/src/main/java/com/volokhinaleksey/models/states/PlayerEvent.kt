@@ -1,0 +1,9 @@
+package com.volokhinaleksey.models.states
+
+sealed class PlayerEvent {
+    object PlayPause : PlayerEvent()
+    object Prev : PlayerEvent()
+    object Next : PlayerEvent()
+    object Stop : PlayerEvent()
+    data class UpdateProgress(val newProgress: Float) : PlayerEvent()
+}

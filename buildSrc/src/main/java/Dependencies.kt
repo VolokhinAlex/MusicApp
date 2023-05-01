@@ -26,7 +26,7 @@ object Versions {
     const val composeViewModel = "2.5.1"
     const val composeNavigation = "2.6.0-alpha08"
     const val composePagerLayouts = "0.30.0"
-    const val composePermission = "0.30.0"
+    const val composePermission = "0.31.1-alpha"
     const val composeCoil = "2.3.0"
 
     // Koin
@@ -40,6 +40,9 @@ object Versions {
     const val junit = "4.13.2"
     const val extJunit = "1.1.5"
     const val espresso = "3.5.1"
+
+    // ExoPlayerMedia3
+    const val exoplayer = "1.0.0"
 }
 
 object Modules {
@@ -77,6 +80,13 @@ object Compose {
     const val composePermission =
         "com.google.accompanist:accompanist-permissions:${Versions.composePermission}"
     const val composeCoil = "io.coil-kt:coil-compose:${Versions.composeCoil}"
+}
+
+object ExoPlayer {
+    const val exoPlayer = "androidx.media3:media3-exoplayer:${Versions.exoplayer}"
+    const val exoPlayerDash =  "androidx.media3:media3-exoplayer-dash:${Versions.exoplayer}"
+    const val exoPlayerUI =  "androidx.media3:media3-ui:${Versions.exoplayer}"
+    const val exoPlayerSession = "androidx.media3:media3-session:${Versions.exoplayer}"
 }
 
 object Tests {

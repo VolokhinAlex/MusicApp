@@ -1,28 +1,24 @@
 package com.volokhinaleksey.musicapp.ui
 
 import android.Manifest
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import com.google.accompanist.permissions.shouldShowRationale
+import com.volokhinaleksey.core.exoplayer.MusicService
 import com.volokhinaleksey.core.ui.navigation.ScreenState
 import com.volokhinaleksey.core.ui.navigation.parcelable
 import com.volokhinaleksey.core.ui.themes.MusicAppTheme
@@ -32,13 +28,17 @@ import com.volokhinaleksey.models.local.Track
 
 class MainActivity : ComponentActivity() {
 
+    private var isServiceRunning = false
+
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val readExternalStorage = rememberPermissionState(
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            )
+            val readExternalStorage =
+                rememberPermissionState(
+                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S_V2) Manifest.permission.READ_MEDIA_AUDIO
+                    else Manifest.permission.READ_EXTERNAL_STORAGE
+                )
             if (readExternalStorage.status.isGranted) {
                 MusicAppTheme {
                     Surface(
@@ -49,42 +49,39 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             } else {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    val textToShow = if (readExternalStorage.status.shouldShowRationale) {
-                        "You must grant permission to read the repository"
-                    } else {
-                        "Read permission required for this feature to be available. " +
-                                "Please grant the permission"
-                    }
-                    Text(textToShow, fontSize = 25.sp, textAlign = TextAlign.Center)
-                    Button(onClick = { readExternalStorage.launchPermissionRequest() }) {
-                        Text("Request permission")
-                    }
+                LaunchedEffect(key1 = true) {
+                    readExternalStorage.launchPermissionRequest()
                 }
             }
         }
     }
 
-}
-
-@Composable
-fun Navigation() {
-    val navController = rememberNavController()
-    NavHost(
-        navController = navController,
-        startDestination = ScreenState.HomeScreen.route
-    ) {
-        composable(route = ScreenState.HomeScreen.route) {
-            HomeScreen(navController = navController)
+    private fun startService() {
+        if (!isServiceRunning) {
+            val intent = Intent(this, MusicService::class.java)
+            startForegroundService(intent)
+            isServiceRunning = true
         }
-        composable(route = ScreenState.DescriptionMusicScreen.route) {
-            val track = it.arguments?.parcelable<Track>()
-            track?.let {
-                DescriptionMusicScreen(track = track, navController = navController)
+    }
+
+    @Composable
+    fun Navigation() {
+        val navController = rememberNavController()
+        NavHost(
+            navController = navController,
+            startDestination = ScreenState.HomeScreen.route
+        ) {
+            composable(route = ScreenState.HomeScreen.route) {
+                HomeScreen(navController = navController)
+            }
+            composable(route = ScreenState.DescriptionMusicScreen.route) {
+                val track = it.arguments?.parcelable<Track>()
+                track?.let {
+                    DescriptionMusicScreen(
+                        track = track,
+                        navController = navController,
+                        startService = { startService() })
+                }
             }
         }
     }

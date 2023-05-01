@@ -38,6 +38,7 @@ android {
 dependencies {
     implementation(project(Modules.core))
     implementation(project(Modules.models))
+    implementation(project(Modules.interactors))
     implementation(Android.ktxCore)
     implementation(Compose.composeNavigation)
     implementation(Compose.composeViewModel)
@@ -51,6 +52,10 @@ dependencies {
     implementation(Koin.koinAndroid)
     implementation(Koin.koinAndroidCompat)
     implementation(Koin.koinCompose)
+    implementation(Compose.composeCoil)
+    implementation(ExoPlayer.exoPlayer)
+    implementation(ExoPlayer.exoPlayerDash)
+    implementation(ExoPlayer.exoPlayerUI)
     testImplementation(Tests.junit)
     androidTestImplementation(Tests.extJunit)
     androidTestImplementation(Tests.espresso)
