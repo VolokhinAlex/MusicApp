@@ -1,5 +1,6 @@
 package com.volokhinaleksey.description_screen.viewmodel
 
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -17,22 +18,35 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+const val REPEAT_MODE_OFF = 0
+const val REPEAT_MODE_ONE = 1
+const val REPEAT_MODE_ALL = 2
+
 class DescriptionMusicViewModel(
     private val simpleMediaServiceHandler: MusicServiceConnection,
     private val homeInteractor: HomeInteractor
 ) : ViewModel() {
 
-    var duration = mutableStateOf(0L)
-    var progress = mutableStateOf(0f)
-    var isPlaying = mutableStateOf(false)
+    private val _duration = mutableStateOf(0L)
+    val duration: State<Long> get() = _duration
 
-    var currentDuration = mutableStateOf(0L)
+    private val _progress = mutableStateOf(0f)
+    val progress: State<Float> get() = _progress
+
+    private val _isPlaying = mutableStateOf(false)
+    val isPlaying: State<Boolean> = _isPlaying
+
+    private val _currentDuration = mutableStateOf(0L)
+    val currentDuration: State<Long> = _currentDuration
 
     private val _uiState = MutableStateFlow<UIState>(UIState.Initial)
     val uiState = _uiState.asStateFlow()
 
     private val _songs = MutableLiveData<TrackState>()
     val songs: LiveData<TrackState> get() = _songs
+
+    private val _currentRepeatMode = mutableStateOf(REPEAT_MODE_OFF)
+    val currentRepeatMode: State<Int> get() = _currentRepeatMode
 
     init {
         getSongsFromRepository()
@@ -41,10 +55,10 @@ class DescriptionMusicViewModel(
                 when (mediaState) {
                     is MediaState.Buffering -> calculateProgressValues(mediaState.progress)
                     MediaState.Initial -> _uiState.value = UIState.Initial
-                    is MediaState.Playing -> isPlaying.value = mediaState.isPlaying
+                    is MediaState.Playing -> _isPlaying.value = mediaState.isPlaying
                     is MediaState.Progress -> calculateProgressValues(mediaState.progress)
                     is MediaState.Ready -> {
-                        duration.value = mediaState.duration
+                        _duration.value = mediaState.track.duration ?: 0
                         _uiState.value = UIState.Ready
                     }
                 }
@@ -69,20 +83,29 @@ class DescriptionMusicViewModel(
             UIEvent.Next -> simpleMediaServiceHandler.onPlayerEvent(PlayerEvent.Next)
             UIEvent.PlayPause -> simpleMediaServiceHandler.onPlayerEvent(PlayerEvent.PlayPause)
             is UIEvent.UpdateProgress -> {
-                progress.value = uiEvent.newProgress
+                _progress.value = uiEvent.newProgress
                 simpleMediaServiceHandler.onPlayerEvent(
                     PlayerEvent.UpdateProgress(
                         uiEvent.newProgress
                     )
                 )
             }
+
+            is UIEvent.RepeatMode -> {
+                _currentRepeatMode.value = uiEvent.mode
+                simpleMediaServiceHandler.onPlayerEvent(
+                    PlayerEvent.RepeatMode(currentRepeatMode.value)
+                )
+            }
+
+            UIEvent.Shuffle -> simpleMediaServiceHandler.onPlayerEvent(PlayerEvent.Shuffle)
         }
     }
 
     private fun calculateProgressValues(currentProgress: Long) {
-        progress.value =
-            if (currentProgress > 0) (currentProgress.toFloat() / duration.value) else 0f
-        currentDuration.value = currentProgress
+        _progress.value =
+            if (currentProgress > 0) (currentProgress.toFloat() / _duration.value) else 0f
+        _currentDuration.value = currentProgress
     }
 
     fun loadData(uri: String) {

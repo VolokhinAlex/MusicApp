@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="repeat">Repeat</string>
+    <string name="skip_previous">Skip previous</string>
+</resources>

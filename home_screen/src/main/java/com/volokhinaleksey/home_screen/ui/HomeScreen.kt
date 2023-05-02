@@ -29,6 +29,8 @@ import com.volokhinaleksey.core.ui.navigation.DATA_KEY
 import com.volokhinaleksey.core.ui.navigation.ScreenState
 import com.volokhinaleksey.core.ui.navigation.navigate
 import com.volokhinaleksey.core.ui.widgets.CardMusic
+import com.volokhinaleksey.core.ui.widgets.ErrorMessage
+import com.volokhinaleksey.core.ui.widgets.LoadingProgressBar
 import com.volokhinaleksey.core.ui.widgets.PagerFavoriteCardMusic
 import com.volokhinaleksey.core.ui.widgets.SearchBar
 import com.volokhinaleksey.core.ui.widgets.rememberSearchState
@@ -38,6 +40,8 @@ import com.volokhinaleksey.models.states.TrackState
 import org.koin.androidx.compose.koinViewModel
 
 private const val EMPTY_TEXT_FIELD = ""
+private val titleTextSize = 25.sp
+private val padding20DP = 20.dp
 
 @OptIn(
     ExperimentalFoundationApi::class, ExperimentalAnimationApi::class,
@@ -52,8 +56,8 @@ fun HomeScreen(
     val tracksList = remember {
         mutableStateListOf<Track>()
     }
-    Scaffold { paddingValues ->
-        Column(modifier = Modifier.padding(paddingValues)) {
+    Scaffold(
+        topBar = {
             SearchBar(
                 query = state.query,
                 onQueryChange = { state.query = it },
@@ -61,19 +65,26 @@ fun HomeScreen(
                 onClearQuery = { state.query = TextFieldValue(EMPTY_TEXT_FIELD) },
                 onBack = { state.query = TextFieldValue(EMPTY_TEXT_FIELD) },
                 searching = state.searching,
-                focused = state.focused
+                focused = state.focused,
+                modifier = Modifier.padding(10.dp)
             )
-
+        }
+    ) { paddingValues ->
+        Column(modifier = Modifier.padding(paddingValues)) {
             Text(
                 text = stringResource(R.string.favorite_songs),
                 color = Color.White,
-                fontSize = 25.sp,
-                modifier = Modifier.padding(20.dp)
+                fontSize = titleTextSize,
+                modifier = Modifier.padding(
+                    bottom = padding20DP,
+                    start = padding20DP,
+                    end = padding20DP
+                )
             )
 
             val pagerState = rememberPagerState()
             HorizontalPager(
-                pageCount = 7,
+                pageCount = tracksList.size,
                 state = pagerState,
                 contentPadding = PaddingValues(horizontal = 32.dp)
             ) { page ->
@@ -88,8 +99,8 @@ fun HomeScreen(
             Text(
                 text = stringResource(R.string.all_songs),
                 color = Color.White,
-                fontSize = 25.sp,
-                modifier = Modifier.padding(20.dp)
+                fontSize = titleTextSize,
+                modifier = Modifier.padding(padding20DP)
             )
 
             homeScreenViewModel.data.observeAsState().value?.let { trackState ->
@@ -102,10 +113,14 @@ fun HomeScreen(
 }
 
 @Composable
-fun RenderData(state: TrackState, navController: NavController, tracks: (List<Track>) -> Unit) {
+private fun RenderData(
+    state: TrackState,
+    navController: NavController,
+    tracks: (List<Track>) -> Unit
+) {
     when (state) {
-        is TrackState.Error -> {}
-        TrackState.Loading -> {}
+        is TrackState.Error -> ErrorMessage(message = state.error)
+        TrackState.Loading -> LoadingProgressBar()
         is TrackState.Success -> {
             val songs = state.tracks
             tracks(songs)
