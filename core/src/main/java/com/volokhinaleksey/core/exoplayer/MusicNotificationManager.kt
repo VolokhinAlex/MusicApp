@@ -63,7 +63,7 @@ class MusicNotificationManager(
         val channel = NotificationChannel(
             "MusicPlayerChannel",
             "MusicPlayer",
-            NotificationManager.IMPORTANCE_LOW
+            NotificationManager.IMPORTANCE_DEFAULT
         )
         notificationManager.createNotificationChannel(channel)
     }

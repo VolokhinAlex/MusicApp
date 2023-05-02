@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
@@ -25,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.volokhinaleksey.core.ui.widgets.ErrorMessage
+import com.volokhinaleksey.core.ui.widgets.LoadingProgressBar
 import com.volokhinaleksey.core.utils.getTrackImageUri
 import com.volokhinaleksey.description_screen.viewmodel.DescriptionMusicViewModel
 import com.volokhinaleksey.models.local.Track
@@ -40,21 +43,17 @@ fun DescriptionMusicScreen(
     songViewModel: DescriptionMusicViewModel = koinViewModel(),
     startService: () -> Unit,
 ) {
-    LaunchedEffect(key1 = true) {
-        songViewModel.loadData(track.path.orEmpty())
-        songViewModel.onUIEvent(UIEvent.PlayPause)
-    }
     val songs = remember {
         mutableStateListOf<Track>()
     }
-    val state = songViewModel.uiState.collectAsState()
+    val state by songViewModel.uiState.collectAsState()
     songViewModel.songs.observeAsState().value?.let {
-        when (it) {
-            is TrackState.Success -> {
-                songs.addAll(it.tracks)
-            }
-
-            else -> {}
+        RenderTrackStateData(
+            currentTrack = track,
+            state = it,
+            songViewModel = songViewModel
+        ) { tracks ->
+            songs.addAll(tracks)
         }
     }
     Column(
@@ -65,32 +64,74 @@ fun DescriptionMusicScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        when (state.value) {
-            UIState.Initial -> {}
-            is UIState.Ready -> {
-                LaunchedEffect(true) {
-                    startService()
-                }
-                TopBarControls(navController = navController, track = track)
-                TrackImage(track = track)
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    TrackInformation(track = track)
-                    BottomControls(
-                        duration = songViewModel.duration.value,
-                        songViewModel = songViewModel,
-                        onUiEvent = songViewModel::onUIEvent,
-                        currentTime = { songViewModel.currentDuration.value },
-                        progress = songViewModel.progress.value
-                    )
-                }
-            }
-        }
-
+        RenderUIState(
+            state = state,
+            songViewModel = songViewModel,
+            navController = navController,
+            startService = startService
+        )
     }
 }
+
+@Composable
+private fun RenderTrackStateData(
+    currentTrack: Track,
+    state: TrackState,
+    songViewModel: DescriptionMusicViewModel,
+    tracks: (List<Track>) -> Unit
+) {
+    when (state) {
+        TrackState.Loading -> LoadingProgressBar()
+        is TrackState.Error -> ErrorMessage(message = state.error)
+        is TrackState.Success -> {
+            tracks(state.tracks)
+            LaunchedEffect(key1 = true) {
+                songViewModel.loadData(
+                    tracks = state.tracks,
+                    currentSongPosition = state.tracks.indexOf(currentTrack),
+                    startDurationMs = 0
+                )
+                songViewModel.onUIEvent(UIEvent.PlayPause)
+            }
+        }
+    }
+}
+
+@Composable
+private fun RenderUIState(
+    state: UIState,
+    songViewModel: DescriptionMusicViewModel,
+    navController: NavController,
+    startService: () -> Unit
+) {
+    when (state) {
+        UIState.Initial -> LoadingProgressBar()
+        is UIState.Ready -> {
+            val track by remember {
+                songViewModel.currentSong
+            }
+            LaunchedEffect(true) {
+                startService()
+            }
+            TopBarControls(navController = navController, track = track)
+            TrackImage(track = track)
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                TrackInformation(track = track)
+                BottomControls(
+                    duration = songViewModel.duration.value,
+                    songViewModel = songViewModel,
+                    onUiEvent = songViewModel::onUIEvent,
+                    currentTime = { songViewModel.currentDuration.value },
+                    progress = songViewModel.progress.value
+                )
+            }
+        }
+    }
+}
+
 
 @Composable
 fun TrackImage(track: Track) {

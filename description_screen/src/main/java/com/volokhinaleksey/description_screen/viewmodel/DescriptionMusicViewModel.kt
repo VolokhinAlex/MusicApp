@@ -2,13 +2,17 @@ package com.volokhinaleksey.description_screen.viewmodel
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.net.toUri
+import androidx.core.os.bundleOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import com.volokhinaleksey.core.exoplayer.MusicServiceConnection
 import com.volokhinaleksey.interactors.home.HomeInteractor
+import com.volokhinaleksey.models.local.Track
 import com.volokhinaleksey.models.states.MediaState
 import com.volokhinaleksey.models.states.PlayerEvent
 import com.volokhinaleksey.models.states.TrackState
@@ -48,6 +52,18 @@ class DescriptionMusicViewModel(
     private val _currentRepeatMode = mutableStateOf(REPEAT_MODE_OFF)
     val currentRepeatMode: State<Int> get() = _currentRepeatMode
 
+    private val _currentSong = mutableStateOf(
+        Track(
+            id = null,
+            title = null,
+            album = null,
+            artist = null,
+            duration = null,
+            path = null
+        )
+    )
+    val currentSong: State<Track> = _currentSong
+
     init {
         getSongsFromRepository()
         viewModelScope.launch {
@@ -58,7 +74,8 @@ class DescriptionMusicViewModel(
                     is MediaState.Playing -> _isPlaying.value = mediaState.isPlaying
                     is MediaState.Progress -> calculateProgressValues(mediaState.progress)
                     is MediaState.Ready -> {
-                        _duration.value = mediaState.track.duration ?: 0
+                        _currentSong.value = mediaState.track
+                        _duration.value = _currentSong.value.duration ?: 0
                         _uiState.value = UIState.Ready
                     }
                 }
@@ -108,8 +125,27 @@ class DescriptionMusicViewModel(
         _currentDuration.value = currentProgress
     }
 
-    fun loadData(uri: String) {
-        simpleMediaServiceHandler.addMediaItem(MediaItem.fromUri(uri))
+    fun loadData(tracks: List<Track>, currentSongPosition: Int, startDurationMs: Long) {
+        simpleMediaServiceHandler.addMediaItemList(
+            mediaItemList = tracks.map {
+                val mediaMetaData = MediaMetadata.Builder().setTitle(it.title).setArtist(it.artist)
+                    .setDescription(it.path).setTrackNumber(it.id?.toInt())
+                    .setAlbumTitle(it.album?.title)
+                    .setExtras(bundleOf("album_id" to it.album?.id)).build()
+                val mediaItem =
+                    MediaItem.Builder().setUri(it.path.orEmpty()).setMediaId(it.id.toString())
+                        .setMediaMetadata(mediaMetaData)
+                        .setRequestMetadata(
+                            MediaItem.RequestMetadata.Builder()
+                                .setMediaUri(it.path.orEmpty().toUri())
+                                .build()
+                        )
+
+                mediaItem.build()
+            },
+            currentSongPosition = currentSongPosition,
+            startDurationMs = startDurationMs
+        )
     }
 
 }
