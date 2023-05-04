@@ -3,6 +3,8 @@ package com.volokhinaleksey.core.exoplayer
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import com.volokhinaleksey.models.local.Album
+import com.volokhinaleksey.models.local.Track
 import com.volokhinaleksey.models.states.MediaState
 import com.volokhinaleksey.models.states.PlayerEvent
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -21,6 +23,8 @@ class MusicServiceConnection(
     private val _mediaState = MutableStateFlow<MediaState>(MediaState.Initial)
     val mediaState = _mediaState.asStateFlow()
 
+    private val currentShuffleMode = true
+
     private var job: Job? = null
 
     init {
@@ -37,6 +41,7 @@ class MusicServiceConnection(
     fun addMediaItemList(mediaItemList: List<MediaItem>) {
         player.setMediaItems(mediaItemList)
         player.prepare()
+        Player.REPEAT_MODE_ALL
     }
 
     suspend fun onPlayerEvent(playerEvent: PlayerEvent) {
@@ -56,6 +61,8 @@ class MusicServiceConnection(
 
             PlayerEvent.Stop -> stopProgressUpdate()
             is PlayerEvent.UpdateProgress -> player.seekTo((player.duration * playerEvent.newProgress).toLong())
+            is PlayerEvent.RepeatMode -> player.repeatMode = playerEvent.mode
+            PlayerEvent.Shuffle -> player.shuffleModeEnabled = !currentShuffleMode
         }
     }
 
@@ -65,7 +72,20 @@ class MusicServiceConnection(
                 MediaState.Buffering(player.currentPosition)
 
             ExoPlayer.STATE_READY -> _mediaState.value =
-                MediaState.Ready(player.duration)
+                MediaState.Ready(
+                    Track(
+                        id = 0,
+                        title = player.currentMediaItem?.mediaMetadata?.title?.toString(),
+                        album = Album(
+                            id = 0,
+                            title = player.currentMediaItem?.mediaMetadata?.albumTitle?.toString()
+                                ?: ""
+                        ),
+                        artist = player.currentMediaItem?.mediaMetadata?.artist?.toString(),
+                        duration = player.duration,
+                        path = null
+                    )
+                )
 
             else -> super.onPlaybackStateChanged(playbackState)
         }
