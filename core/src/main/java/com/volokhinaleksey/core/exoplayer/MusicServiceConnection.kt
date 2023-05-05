@@ -32,22 +32,19 @@ class MusicServiceConnection(
         job = Job()
     }
 
-
-    fun addMediaItem(mediaItem: MediaItem) {
-        player.setMediaItem(mediaItem)
+    fun addMediaItemList(
+        mediaItemList: List<MediaItem>,
+        currentSongPosition: Int,
+        startDurationMs: Long
+    ) {
+        player.setMediaItems(mediaItemList, currentSongPosition, startDurationMs)
         player.prepare()
-    }
-
-    fun addMediaItemList(mediaItemList: List<MediaItem>) {
-        player.setMediaItems(mediaItemList)
-        player.prepare()
-        Player.REPEAT_MODE_ALL
     }
 
     suspend fun onPlayerEvent(playerEvent: PlayerEvent) {
         when (playerEvent) {
-            PlayerEvent.Prev -> player.hasPreviousMediaItem()
-            PlayerEvent.Next -> player.hasNextMediaItem()
+            PlayerEvent.Prev -> player.seekToPrevious()
+            PlayerEvent.Next -> player.seekToNext()
             PlayerEvent.PlayPause -> {
                 if (player.isPlaying) {
                     player.pause()
@@ -75,15 +72,14 @@ class MusicServiceConnection(
                 MediaState.Ready(
                     Track(
                         id = 0,
-                        title = player.currentMediaItem?.mediaMetadata?.title?.toString(),
+                        title = player.mediaMetadata.title?.toString(),
                         album = Album(
-                            id = 0,
-                            title = player.currentMediaItem?.mediaMetadata?.albumTitle?.toString()
-                                ?: ""
+                            id = player.mediaMetadata.extras?.getLong("album_id") ?: 0,
+                            title = player.mediaMetadata.albumTitle?.toString() ?: ""
                         ),
-                        artist = player.currentMediaItem?.mediaMetadata?.artist?.toString(),
+                        artist = player.mediaMetadata.artist?.toString(),
                         duration = player.duration,
-                        path = null
+                        path = player.mediaMetadata.description?.toString()
                     )
                 )
 
