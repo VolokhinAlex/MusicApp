@@ -5,7 +5,10 @@ import com.volokhinaleksey.models.ui.TrackUI
 import kotlinx.coroutines.flow.Flow
 
 interface MainInteractor {
-    suspend fun getSongs(): TrackState
+
+    suspend fun getSongs(
+        query: Array<String>
+    ): TrackState
 
     fun getFavoriteSongs(): Flow<List<TrackUI>>
 

@@ -12,8 +12,9 @@ import kotlinx.coroutines.flow.map
 class MainRepositoryImpl(
     private val homeDataSource: HomeDataSource
 ) : MainRepository {
-    override suspend fun getSongs(): List<LocalTrack> {
-        return homeDataSource.getSongs().map {
+
+    override suspend fun getSongs(query: Array<String>): List<LocalTrack> {
+        return homeDataSource.getSongs(query = query).map {
             homeDataSource.insertSong(mapTrackLocalToSongEntity(localTrack = it))
             homeDataSource.insertFavoriteSong(mapLocalTrackToFavoriteEntity(localTrack = it))
             it

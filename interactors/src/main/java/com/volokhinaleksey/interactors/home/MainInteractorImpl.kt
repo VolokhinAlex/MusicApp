@@ -13,8 +13,8 @@ class MainInteractorImpl(
     private val repository: MainRepository
 ) : MainInteractor {
 
-    override suspend fun getSongs(): TrackState {
-        return Success(tracks = repository.getSongs().map {
+    override suspend fun getSongs(query: Array<String>): TrackState {
+        return Success(tracks = repository.getSongs(query = query).map {
             mapLocalTrackToTrackUI(it)
         })
     }

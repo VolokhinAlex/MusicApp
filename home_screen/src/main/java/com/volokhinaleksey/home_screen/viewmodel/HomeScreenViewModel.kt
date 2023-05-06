@@ -13,15 +13,15 @@ class HomeScreenViewModel(
 ) : BaseViewModel<TrackState>() {
 
     init {
-        getSongs()
+        getSongs(query = arrayOf())
     }
 
-    private fun getSongs() {
+    fun getSongs(query: Array<String>) {
         mutableData.value = TrackState.Loading
         viewModelScope.launch(dispatcher + CoroutineExceptionHandler { _, throwable ->
             mutableData.postValue(TrackState.Error(error = throwable.localizedMessage.orEmpty()))
         }) {
-            mutableData.postValue(mainInteractor.getSongs())
+            mutableData.postValue(mainInteractor.getSongs(query = query))
         }
     }
 
