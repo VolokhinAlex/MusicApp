@@ -27,13 +27,14 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
+
 }
 
 dependencies {
     implementation(project(Modules.models))
+    implementation(project(Modules.core))
+    implementation(project(Modules.database))
+    implementation(Room.roomRuntime)
     implementation(Android.ktxCore)
     testImplementation(Tests.junit)
 }

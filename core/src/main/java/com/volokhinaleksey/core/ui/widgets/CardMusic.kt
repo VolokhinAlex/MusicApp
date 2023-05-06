@@ -23,10 +23,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.volokhinaleksey.core.utils.getTrackImageUri
-import com.volokhinaleksey.models.local.Track
+import com.volokhinaleksey.models.ui.TrackUI
 
 @Composable
-fun CardMusic(track: Track, onActionClick: () -> Unit) {
+fun CardMusic(track: TrackUI, onActionClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxSize()
@@ -43,11 +43,11 @@ fun CardMusic(track: Track, onActionClick: () -> Unit) {
 
             Column(Modifier.padding(start = 10.dp)) {
                 Text(
-                    text = "${track.title}", fontSize = 18.sp, color = Color.White, maxLines = 1,
+                    text = track.title, fontSize = 18.sp, color = Color.White, maxLines = 1,
                     overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth(0.65f)
                 )
                 Text(
-                    text = if (track.artist.equals("<unknown>")) "Unknown artist" else "${track.artist}",
+                    text = if (track.artist == "<unknown>") "Unknown artist" else track.artist,
                     fontSize = 18.sp,
                     color = Color.White, maxLines = 1,
                     overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth(0.65f)

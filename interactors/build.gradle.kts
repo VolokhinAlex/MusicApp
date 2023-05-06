@@ -21,14 +21,12 @@ android {
             )
         }
     }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
 }
 
 dependencies {
     implementation(Android.ktxCore)
     implementation(project(Modules.models))
+    implementation(project(Modules.core))
     implementation(project(Modules.repositories))
     testImplementation(Tests.junit)
 }

@@ -20,7 +20,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,15 +31,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import coil.compose.AsyncImage
 import com.volokhinaleksey.core.utils.getTrackImageUri
-import com.volokhinaleksey.models.local.Track
+import com.volokhinaleksey.models.ui.TrackUI
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PagerFavoriteCardMusic(
     pagerState: PagerState,
     page: Int,
-    tracks: SnapshotStateList<Track>,
-    onClickAction: (Track) -> Unit
+    track: List<TrackUI>,
+    onClickAction: (TrackUI) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -70,7 +69,7 @@ fun PagerFavoriteCardMusic(
                     .fillMaxSize()
             ) {
                 AsyncImage(
-                    model = getTrackImageUri(tracks[page]),
+                    model = getTrackImageUri(track[page]),
                     contentDescription = "Music Picture",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
@@ -95,14 +94,14 @@ fun PagerFavoriteCardMusic(
                     ) {
                         Column(Modifier.padding(20.dp, 0.dp)) {
                             Text(
-                                text = tracks[page].title.orEmpty(),
+                                text = track[page].title,
                                 color = Color.White,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.fillMaxWidth(0.65f)
                             )
                             Text(
-                                text = if (tracks[page].artist.equals("<unknown>")) "Unknown artist" else "${tracks[page].artist}",
+                                text = if (track[page].artist == "<unknown>") "Unknown artist" else track[page].artist,
                                 color = Color.White,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
@@ -110,7 +109,7 @@ fun PagerFavoriteCardMusic(
                             )
                         }
                         IconButton(
-                            onClick = { onClickAction(tracks[page]) },
+                            onClick = { onClickAction(track[page]) },
                             modifier = Modifier
                                 .padding(20.dp, 0.dp)
                                 .size(30.dp)

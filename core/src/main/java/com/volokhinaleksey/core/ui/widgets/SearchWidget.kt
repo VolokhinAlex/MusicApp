@@ -49,7 +49,6 @@ fun SearchBar(
     focused: Boolean,
     modifier: Modifier = Modifier
 ) {
-
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -126,8 +125,8 @@ fun SearchTextField(
                 Modifier
                     .height(56.dp)
                     .padding(
-                        top = 8.dp,
-                        bottom = 8.dp,
+                        top = 20.dp,
+                        bottom = 0.dp,
                         start = if (!focused) 16.dp else 0.dp,
                         end = 16.dp
                     )

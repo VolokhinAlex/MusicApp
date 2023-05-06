@@ -22,11 +22,9 @@ android {
             )
         }
     }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
 }
 
 dependencies {
     implementation(Android.ktxCore)
+    implementation(Room.roomRuntime)
 }

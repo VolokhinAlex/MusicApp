@@ -11,13 +11,18 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import com.volokhinaleksey.core.exoplayer.MusicServiceConnection
-import com.volokhinaleksey.interactors.home.HomeInteractor
-import com.volokhinaleksey.models.local.Track
+import com.volokhinaleksey.core.utils.ALBUM_ID_BUNDLE
+import com.volokhinaleksey.core.utils.SONG_ID_BUNDLE
+import com.volokhinaleksey.core.utils.SONG_PATH_BUNDLE
+import com.volokhinaleksey.interactors.home.MainInteractor
 import com.volokhinaleksey.models.states.MediaState
 import com.volokhinaleksey.models.states.PlayerEvent
 import com.volokhinaleksey.models.states.TrackState
-import com.volokhinaleksey.models.states.UIEvent
+import com.volokhinaleksey.models.states.UIMusicEvent
 import com.volokhinaleksey.models.states.UIState
+import com.volokhinaleksey.models.ui.TrackUI
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -28,7 +33,8 @@ const val REPEAT_MODE_ALL = 2
 
 class DescriptionMusicViewModel(
     private val simpleMediaServiceHandler: MusicServiceConnection,
-    private val homeInteractor: HomeInteractor
+    private val mainInteractor: MainInteractor,
+    private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
     private val _duration = mutableStateOf(0L)
@@ -46,26 +52,17 @@ class DescriptionMusicViewModel(
     private val _uiState = MutableStateFlow<UIState>(UIState.Initial)
     val uiState = _uiState.asStateFlow()
 
-    private val _songs = MutableLiveData<TrackState>()
-    val songs: LiveData<TrackState> get() = _songs
-
     private val _currentRepeatMode = mutableStateOf(REPEAT_MODE_OFF)
     val currentRepeatMode: State<Int> get() = _currentRepeatMode
 
-    private val _currentSong = mutableStateOf(
-        Track(
-            id = null,
-            title = null,
-            album = null,
-            artist = null,
-            duration = null,
-            path = null
-        )
-    )
-    val currentSong: State<Track> = _currentSong
+    private val _currentSong = mutableStateOf(TrackUI())
+    val currentSong: State<TrackUI> = _currentSong
+
+    private val _songs: MutableLiveData<TrackState> = MutableLiveData()
+    val songs: LiveData<TrackState> get() = _songs
 
     init {
-        getSongsFromRepository()
+        getSongs()
         viewModelScope.launch {
             simpleMediaServiceHandler.mediaState.collect { mediaState ->
                 when (mediaState) {
@@ -74,8 +71,8 @@ class DescriptionMusicViewModel(
                     is MediaState.Playing -> _isPlaying.value = mediaState.isPlaying
                     is MediaState.Progress -> calculateProgressValues(mediaState.progress)
                     is MediaState.Ready -> {
-                        _currentSong.value = mediaState.track
-                        _duration.value = _currentSong.value.duration ?: 0
+                        _currentSong.value = mediaState.trackUI
+                        _duration.value = _currentSong.value.duration
                         _uiState.value = UIState.Ready
                     }
                 }
@@ -83,9 +80,12 @@ class DescriptionMusicViewModel(
         }
     }
 
-    private fun getSongsFromRepository() {
-        _songs.value = TrackState.Loading
-        _songs.value = homeInteractor.getSongs()
+    private fun getSongs() {
+        viewModelScope.launch(dispatcher + CoroutineExceptionHandler { _, throwable ->
+            _songs.postValue(TrackState.Error(throwable.localizedMessage.orEmpty()))
+        }) {
+            _songs.postValue(mainInteractor.getSongs())
+        }
     }
 
     override fun onCleared() {
@@ -94,28 +94,26 @@ class DescriptionMusicViewModel(
         }
     }
 
-    fun onUIEvent(uiEvent: UIEvent) = viewModelScope.launch {
-        when (uiEvent) {
-            UIEvent.Prev -> simpleMediaServiceHandler.onPlayerEvent(PlayerEvent.Prev)
-            UIEvent.Next -> simpleMediaServiceHandler.onPlayerEvent(PlayerEvent.Next)
-            UIEvent.PlayPause -> simpleMediaServiceHandler.onPlayerEvent(PlayerEvent.PlayPause)
-            is UIEvent.UpdateProgress -> {
-                _progress.value = uiEvent.newProgress
+    fun onUIEvent(uiMusicEvent: UIMusicEvent) = viewModelScope.launch {
+        when (uiMusicEvent) {
+            UIMusicEvent.Prev -> simpleMediaServiceHandler.onPlayerEvent(PlayerEvent.Prev)
+            UIMusicEvent.Next -> simpleMediaServiceHandler.onPlayerEvent(PlayerEvent.Next)
+            UIMusicEvent.PlayPause -> simpleMediaServiceHandler.onPlayerEvent(PlayerEvent.PlayPause)
+            is UIMusicEvent.UpdateProgress -> {
+                _progress.value = uiMusicEvent.newProgress
                 simpleMediaServiceHandler.onPlayerEvent(
                     PlayerEvent.UpdateProgress(
-                        uiEvent.newProgress
+                        uiMusicEvent.newProgress
                     )
                 )
             }
 
-            is UIEvent.RepeatMode -> {
-                _currentRepeatMode.value = uiEvent.mode
+            is UIMusicEvent.RepeatMode -> {
+                _currentRepeatMode.value = uiMusicEvent.mode
                 simpleMediaServiceHandler.onPlayerEvent(
                     PlayerEvent.RepeatMode(currentRepeatMode.value)
                 )
             }
-
-            UIEvent.Shuffle -> simpleMediaServiceHandler.onPlayerEvent(PlayerEvent.Shuffle)
         }
     }
 
@@ -125,19 +123,26 @@ class DescriptionMusicViewModel(
         _currentDuration.value = currentProgress
     }
 
-    fun loadData(tracks: List<Track>, currentSongPosition: Int, startDurationMs: Long) {
+    fun loadData(trackUI: List<TrackUI>, currentSongPosition: Int, startDurationMs: Long) {
         simpleMediaServiceHandler.addMediaItemList(
-            mediaItemList = tracks.map {
-                val mediaMetaData = MediaMetadata.Builder().setTitle(it.title).setArtist(it.artist)
-                    .setDescription(it.path).setTrackNumber(it.id?.toInt())
-                    .setAlbumTitle(it.album?.title)
-                    .setExtras(bundleOf("album_id" to it.album?.id)).build()
+            mediaItemList = trackUI.map {
+                val mediaMetaData = MediaMetadata.Builder()
+                    .setTitle(it.title)
+                    .setArtist(it.artist)
+                    .setAlbumTitle(it.albumUI.title)
+                    .setExtras(
+                        bundleOf(
+                            ALBUM_ID_BUNDLE to it.albumUI.id,
+                            SONG_PATH_BUNDLE to it.path,
+                            SONG_ID_BUNDLE to it.id
+                        )
+                    ).build()
                 val mediaItem =
-                    MediaItem.Builder().setUri(it.path.orEmpty()).setMediaId(it.id.toString())
+                    MediaItem.Builder().setUri(it.path).setMediaId(it.id.toString())
                         .setMediaMetadata(mediaMetaData)
                         .setRequestMetadata(
                             MediaItem.RequestMetadata.Builder()
-                                .setMediaUri(it.path.orEmpty().toUri())
+                                .setMediaUri(it.path.toUri())
                                 .build()
                         )
 
@@ -148,4 +153,12 @@ class DescriptionMusicViewModel(
         )
     }
 
+    fun upsertFavoriteSong(trackUI: TrackUI) {
+        viewModelScope.launch(dispatcher) {
+            mainInteractor.upsertFavoriteSong(trackUI)
+        }
+    }
+
+    fun getFavoriteSongByTitle(title: String) =
+        mainInteractor.getFavoriteSongByTitle(title = title)
 }

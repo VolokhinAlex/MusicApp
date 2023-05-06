@@ -24,7 +24,7 @@ import com.volokhinaleksey.core.ui.navigation.parcelable
 import com.volokhinaleksey.core.ui.themes.MusicAppTheme
 import com.volokhinaleksey.description_screen.ui.DescriptionMusicScreen
 import com.volokhinaleksey.home_screen.ui.HomeScreen
-import com.volokhinaleksey.models.local.Track
+import com.volokhinaleksey.models.ui.TrackUI
 
 class MainActivity : ComponentActivity() {
 
@@ -75,10 +75,10 @@ class MainActivity : ComponentActivity() {
                 HomeScreen(navController = navController)
             }
             composable(route = ScreenState.DescriptionMusicScreen.route) {
-                val track = it.arguments?.parcelable<Track>()
-                track?.let {
+                val trackUI = it.arguments?.parcelable<TrackUI>()
+                trackUI?.let {
                     DescriptionMusicScreen(
-                        track = track,
+                        track = trackUI,
                         navController = navController,
                         startService = { startService() })
                 }

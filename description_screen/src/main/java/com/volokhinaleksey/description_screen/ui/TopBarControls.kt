@@ -17,10 +17,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.volokhinaleksey.models.local.Track
+import com.volokhinaleksey.models.ui.TrackUI
 
 @Composable
-fun TopBarControls(navController: NavController, track: Track) {
+fun TopBarControls(navController: NavController, trackUI: TrackUI) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -37,7 +37,7 @@ fun TopBarControls(navController: NavController, track: Track) {
         }
 
         Text(
-            text = "${track.title}", fontSize = 18.sp, color = Color.White, maxLines = 1,
+            text = trackUI.title, fontSize = 18.sp, color = Color.White, maxLines = 1,
             overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth(0.7f),
             textAlign = TextAlign.Center
         )
