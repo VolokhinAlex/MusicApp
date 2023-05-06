@@ -48,7 +48,7 @@ val homeScreen = module {
 
 val songScreen = module {
     factory { Dispatchers.IO }
-    factory { MusicServiceConnection(get()) }
+    single { MusicServiceConnection(get()) }
     viewModel { DescriptionMusicViewModel(get(), get(), get()) }
 }
 

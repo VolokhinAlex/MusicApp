@@ -23,7 +23,9 @@
         <activity
             android:name="com.volokhinaleksey.musicapp.ui.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.MusicApp">
+            android:theme="@style/Theme.MusicApp"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

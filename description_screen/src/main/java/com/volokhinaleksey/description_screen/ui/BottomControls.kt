@@ -19,6 +19,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,8 +45,8 @@ fun BottomControls(
     onUIMusicEvent: (UIMusicEvent) -> Unit,
     currentTime: () -> Long
 ) {
-    var newProgressValue by remember { mutableStateOf(0f) }
-    var useNewProgressValue by remember { mutableStateOf(false) }
+    var newProgressValue by rememberSaveable { mutableStateOf(0f) }
+    var useNewProgressValue by rememberSaveable { mutableStateOf(false) }
     val musicTime = remember(currentTime()) { currentTime() }
     Column {
         Slider(
@@ -125,6 +126,7 @@ fun BottomControls(
                 modifier = Modifier.size(30.dp)
             )
         }
+
         IconButton(
             onClick = {
                 onUIMusicEvent(UIMusicEvent.PlayPause)

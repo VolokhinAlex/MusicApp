@@ -1,6 +1,7 @@
 package com.volokhinaleksey.core.exoplayer
 
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.volokhinaleksey.core.utils.ALBUM_ID_BUNDLE
@@ -51,12 +52,9 @@ class MusicServiceConnection(
                     player.pause()
                     stopProgressUpdate()
                 } else {
-                    job.run {
-                        delay(500)
-                        player.play()
-                        _mediaState.value = MediaState.Playing(isPlaying = true)
-                        startProgressUpdate()
-                    }
+                    player.play()
+                    _mediaState.value = MediaState.Playing(isPlaying = true)
+                    startProgressUpdate()
                 }
             }
 
@@ -87,6 +85,23 @@ class MusicServiceConnection(
 
             else -> super.onPlaybackStateChanged(playbackState)
         }
+    }
+
+    override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+        _mediaState.value = MediaState.Ready(
+            TrackUI(
+                id = mediaMetadata.extras?.getLong(SONG_ID_BUNDLE) ?: 0,
+                title = mediaMetadata.title?.toString() ?: "",
+                albumUI = AlbumUI(
+                    id = mediaMetadata.extras?.getLong(ALBUM_ID_BUNDLE) ?: 0,
+                    title = mediaMetadata.albumTitle?.toString() ?: ""
+                ),
+                artist = mediaMetadata.artist?.toString() ?: "",
+                duration = player.duration,
+                path = mediaMetadata.extras?.getString(SONG_PATH_BUNDLE) ?: ""
+            )
+        )
+        super.onMediaMetadataChanged(mediaMetadata)
     }
 
     @OptIn(DelicateCoroutinesApi::class)
