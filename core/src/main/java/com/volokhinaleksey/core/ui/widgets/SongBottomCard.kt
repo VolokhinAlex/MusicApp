@@ -23,14 +23,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.media3.common.MediaItem
-import androidx.media3.exoplayer.ExoPlayer
 import coil.compose.AsyncImage
 import com.volokhinaleksey.core.utils.getTrackImageUri
 import com.volokhinaleksey.models.ui.TrackUI
 
 @Composable
-fun SongBottomCard(tracks: List<TrackUI>, exoPlayer: ExoPlayer, isPlaying: () -> Boolean) {
+fun SongBottomCard(tracks: List<TrackUI>, isPlaying: () -> Boolean) {
     val playing = remember(isPlaying()) { isPlaying() }
     LazyRow {
         itemsIndexed(tracks) { _, item ->
@@ -59,11 +57,11 @@ fun SongBottomCard(tracks: List<TrackUI>, exoPlayer: ExoPlayer, isPlaying: () ->
                     }
                 }
                 IconButton(onClick = {
-                    exoPlayer.setMediaItem(MediaItem.fromUri(item.path))
+                    //exoPlayer.setMediaItem(MediaItem.fromUri(item.path))
                     if (playing) {
-                        exoPlayer.stop()
+                        //    exoPlayer.stop()
                     } else {
-                        exoPlayer.play()
+                        //   exoPlayer.play()
                     }
                 }) {
                     Icon(

@@ -11,6 +11,9 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.ui.PlayerNotificationManager
+import com.volokhinaleksey.core.utils.CHANNEL_ID
+import com.volokhinaleksey.core.utils.NAME_NOTIFICATION
+import com.volokhinaleksey.core.utils.NOTIFICATION_ID
 
 class MusicNotificationManager(
     private val context: Context,
@@ -35,34 +38,34 @@ class MusicNotificationManager(
 
     @UnstableApi
     private fun buildNotification(mediaSession: MediaSession) {
-        PlayerNotificationManager.Builder(context, 200, "MusicPlayerChannel")
+        PlayerNotificationManager.Builder(context, NOTIFICATION_ID, CHANNEL_ID)
             .setMediaDescriptionAdapter(
                 MusicNotificationAdapter(
                     pendingIntent = mediaSession.sessionActivity
                 )
             )
             .build()
-            .also {
-                it.setMediaSessionToken(mediaSession.sessionCompatToken)
-                it.setUseFastForwardActionInCompactView(true)
-                it.setUseRewindActionInCompactView(true)
-                it.setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                it.setUseNextActionInCompactView(false)
-                it.setPlayer(player)
+            .apply {
+                setMediaSessionToken(mediaSession.sessionCompatToken)
+                setUseFastForwardActionInCompactView(true)
+                setUseRewindActionInCompactView(true)
+                setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                setUseNextActionInCompactView(false)
+                setPlayer(player)
             }
     }
 
     private fun startForegroundNotification(mediaSessionService: MediaSessionService) {
-        val notification = Notification.Builder(context, "MusicPlayerChannel")
+        val notification = Notification.Builder(context, CHANNEL_ID)
             .setCategory(Notification.CATEGORY_SERVICE)
             .build()
-        mediaSessionService.startForeground(200, notification)
+        mediaSessionService.startForeground(NOTIFICATION_ID, notification)
     }
 
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
-            "MusicPlayerChannel",
-            "MusicPlayer",
+            CHANNEL_ID,
+            NAME_NOTIFICATION,
             NotificationManager.IMPORTANCE_DEFAULT
         )
         notificationManager.createNotificationChannel(channel)

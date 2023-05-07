@@ -27,7 +27,24 @@ class MusicServiceConnection(
     private val _mediaState = MutableStateFlow<MediaState>(MediaState.Initial)
     val mediaState = _mediaState.asStateFlow()
 
+//    private val dataStore: DataStore<Preferences> by inject()
+
     private var job: Job? = null
+
+//    private val currentPosition: Flow<Long> by lazy {
+//        dataStore.data.map {
+//            it[currentSongPositionKey] ?: 0
+//        }
+//    }
+//
+//    private val currentTrack: Flow<String> by lazy {
+//        dataStore.data.map {
+//            it[currentSongTitleKey] ?: ""
+//        }
+//    }
+
+    private var currentPosition = 0L
+    private var currentTrack = TrackUI()
 
     init {
         player.addListener(this)
@@ -88,19 +105,23 @@ class MusicServiceConnection(
     }
 
     override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
-        _mediaState.value = MediaState.Ready(
-            TrackUI(
-                id = mediaMetadata.extras?.getLong(SONG_ID_BUNDLE) ?: 0,
-                title = mediaMetadata.title?.toString() ?: "",
-                albumUI = AlbumUI(
-                    id = mediaMetadata.extras?.getLong(ALBUM_ID_BUNDLE) ?: 0,
-                    title = mediaMetadata.albumTitle?.toString() ?: ""
-                ),
-                artist = mediaMetadata.artist?.toString() ?: "",
-                duration = player.duration,
-                path = mediaMetadata.extras?.getString(SONG_PATH_BUNDLE) ?: ""
-            )
+        val track = TrackUI(
+            id = mediaMetadata.extras?.getLong(SONG_ID_BUNDLE) ?: 0,
+            title = mediaMetadata.title?.toString() ?: "",
+            albumUI = AlbumUI(
+                id = mediaMetadata.extras?.getLong(ALBUM_ID_BUNDLE) ?: 0,
+                title = mediaMetadata.albumTitle?.toString() ?: ""
+            ),
+            artist = mediaMetadata.artist?.toString() ?: "",
+            duration = player.duration,
+            path = mediaMetadata.extras?.getString(SONG_PATH_BUNDLE) ?: ""
         )
+        if (currentTrack.title == track.title && currentPosition != 0L) {
+            player.seekTo(currentPosition)
+        }
+        _mediaState.value = MediaState.Ready(track)
+        currentTrack = track
+//        saveCurrentMusicData(trackUI = track)
         super.onMediaMetadataChanged(mediaMetadata)
     }
 
@@ -117,9 +138,35 @@ class MusicServiceConnection(
         super.onIsPlayingChanged(isPlaying)
     }
 
+//    @OptIn(DelicateCoroutinesApi::class)
+//    private fun saveCurrentMusicData(trackUI: TrackUI) {
+//        GlobalScope.launch {
+//            dataStore.edit { preferences ->
+//                preferences[currentSongTitleKey] = trackUI.title
+//                preferences[currentSongIdKey] = trackUI.id
+//                preferences[currentSongAlbumIdKey] = trackUI.albumUI.id
+//                preferences[currentSongAlbumTitleKey] = trackUI.albumUI.title
+//                preferences[currentSongArtistKey] = trackUI.artist
+//                preferences[currentSongDurationKey] = trackUI.duration
+//                preferences[currentSongPathKey] = trackUI.path
+//            }
+//        }
+//    }
+//
+//    @OptIn(DelicateCoroutinesApi::class)
+//    private fun saveCurrentMusicPosition(currentSongPosition: Long) {
+//        GlobalScope.launch {
+//            dataStore.edit { preferences ->
+//                preferences[currentSongPositionKey] = currentSongPosition
+//            }
+//        }
+//    }
+
     private suspend fun startProgressUpdate() = job.run {
         while (true) {
             delay(500)
+            //saveCurrentMusicPosition(currentSongPosition = player.currentPosition)
+            currentPosition = player.currentPosition
             _mediaState.value = MediaState.Progress(player.currentPosition)
         }
     }

@@ -28,11 +28,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.volokhinaleksey.core.R
+import com.volokhinaleksey.core.utils.REPEAT_MODE_ALL
+import com.volokhinaleksey.core.utils.REPEAT_MODE_OFF
+import com.volokhinaleksey.core.utils.REPEAT_MODE_ONE
 import com.volokhinaleksey.core.utils.durationConvert
 import com.volokhinaleksey.description_screen.viewmodel.DescriptionMusicViewModel
-import com.volokhinaleksey.description_screen.viewmodel.REPEAT_MODE_ALL
-import com.volokhinaleksey.description_screen.viewmodel.REPEAT_MODE_OFF
-import com.volokhinaleksey.description_screen.viewmodel.REPEAT_MODE_ONE
 import com.volokhinaleksey.models.states.UIMusicEvent
 import com.volokhinaleksey.models.ui.TrackUI
 
