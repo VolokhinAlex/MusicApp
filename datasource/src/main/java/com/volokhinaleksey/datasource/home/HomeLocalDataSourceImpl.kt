@@ -2,15 +2,22 @@ package com.volokhinaleksey.datasource.home
 
 import android.content.Context
 import android.provider.MediaStore
-import com.volokhinaleksey.models.local.Album
-import com.volokhinaleksey.models.local.Track
+import com.volokhinaleksey.core.utils.mapSongEntityToLocalTrack
+import com.volokhinaleksey.database.MusicDatabase
+import com.volokhinaleksey.models.local.FavoriteEntity
+import com.volokhinaleksey.models.local.LocalAlbum
+import com.volokhinaleksey.models.local.LocalTrack
+import com.volokhinaleksey.models.local.SongEntity
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class HomeLocalDataSourceImpl(
-    private val context: Context
+    private val context: Context,
+    private val db: MusicDatabase
 ) : HomeDataSource {
 
-    override fun getSongs(): List<Track> {
-        val songs = mutableListOf<Track>()
+    override suspend fun getSongs(): List<LocalTrack> {
+        val songs = mutableListOf<LocalTrack>()
         val cursor = context.contentResolver.query(
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
             null,
@@ -34,19 +41,54 @@ class HomeLocalDataSourceImpl(
                 val albumId =
                     cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID))
                 songs.add(
-                    Track(
+                    LocalTrack(
                         id = id,
                         title = title,
-                        album = Album(id = albumId, title = album),
+                        localAlbum = LocalAlbum(id = albumId, title = album),
                         artist = artist,
                         duration = duration.toLong(),
-                        path = path
+                        path = path,
+                        isFavorite = false
                     )
                 )
             } while (cursor.moveToNext())
         }
         cursor?.close()
         return songs
+    }
+
+    override fun getFavoriteSongs(): Flow<List<LocalTrack>> {
+        return db.favoriteDao().all().map {
+            it.map { favorite ->
+                val song = db.songDao().getSongByTitle(title = favorite.title)
+                mapSongEntityToLocalTrack(
+                    songEntity = song,
+                    favoriteEntity = favorite
+                )
+            }
+        }
+    }
+
+    override suspend fun insertFavoriteSong(favoriteEntity: FavoriteEntity) {
+        db.favoriteDao().insert(entity = favoriteEntity)
+    }
+
+    override suspend fun insertSong(songEntity: SongEntity) {
+        db.songDao().insert(entity = songEntity)
+    }
+
+    override suspend fun upsertFavoriteSong(favoriteEntity: FavoriteEntity) {
+        db.favoriteDao().upsert(entity = favoriteEntity)
+    }
+
+    override fun getFavoriteSongByTitle(title: String): Flow<LocalTrack> {
+        return db.favoriteDao().getFavoriteMusicByTitle(title = title).map {
+            val song = db.songDao().getSongByTitle(title = it.title)
+            mapSongEntityToLocalTrack(
+                songEntity = song,
+                favoriteEntity = it
+            )
+        }
     }
 
 }

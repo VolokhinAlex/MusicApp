@@ -27,10 +27,10 @@ import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import coil.compose.AsyncImage
 import com.volokhinaleksey.core.utils.getTrackImageUri
-import com.volokhinaleksey.models.local.Track
+import com.volokhinaleksey.models.ui.TrackUI
 
 @Composable
-fun SongBottomCard(tracks: List<Track>, exoPlayer: ExoPlayer, isPlaying: () -> Boolean) {
+fun SongBottomCard(tracks: List<TrackUI>, exoPlayer: ExoPlayer, isPlaying: () -> Boolean) {
     val playing = remember(isPlaying()) { isPlaying() }
     LazyRow {
         itemsIndexed(tracks) { _, item ->
@@ -54,12 +54,12 @@ fun SongBottomCard(tracks: List<Track>, exoPlayer: ExoPlayer, isPlaying: () -> B
                             .clip(RoundedCornerShape(3.dp))
                     )
                     Column(modifier = Modifier.padding(start = 10.dp)) {
-                        Text(text = "${item.title}", color = Color.White, fontSize = 22.sp)
-                        Text(text = "${item.artist}", color = Color.White, fontSize = 18.sp)
+                        Text(text = item.title, color = Color.White, fontSize = 22.sp)
+                        Text(text = item.artist, color = Color.White, fontSize = 18.sp)
                     }
                 }
                 IconButton(onClick = {
-                    exoPlayer.setMediaItem(MediaItem.fromUri(item.path.orEmpty()))
+                    exoPlayer.setMediaItem(MediaItem.fromUri(item.path))
                     if (playing) {
                         exoPlayer.stop()
                     } else {

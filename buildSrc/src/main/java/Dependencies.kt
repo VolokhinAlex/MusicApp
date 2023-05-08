@@ -5,7 +5,7 @@ object Config {
     const val compileSdk = 33
     const val minSdk = 27
     const val targetSdk = 33
-    val javaVersion = JavaVersion.VERSION_1_8
+    val javaVersion = JavaVersion.VERSION_17
 }
 
 object Releases {
@@ -19,6 +19,16 @@ object Versions {
 
     // Lifecycle
     const val lifecycleRuntimeKtx = "2.6.1"
+
+    // Room
+    const val roomKtx = "2.5.0"
+    const val roomCompiler = "2.5.0"
+    const val roomRuntime = "2.5.0"
+
+    // Coroutines
+    const val coroutinesCore = "1.6.4"
+    const val coroutinesAndroid = "1.6.4"
+    const val coroutinesTest = "1.6.4"
 
     // Compose
     const val activityCompose = "1.7.0"
@@ -53,10 +63,26 @@ object Modules {
     const val models = ":models"
     const val datasource = ":datasource"
     const val repositories = ":repositories"
+    const val database = ":database"
 }
 
 object Android {
     const val ktxCore = "androidx.core:core-ktx:${Versions.ktxCore}"
+}
+
+object Room {
+    const val roomRuntime = "androidx.room:room-runtime:${Versions.roomRuntime}"
+    const val roomCompiler = "androidx.room:room-compiler:${Versions.roomCompiler}"
+    const val roomKtx = "androidx.room:room-ktx:${Versions.roomKtx}"
+}
+
+object Coroutines {
+    const val coroutinesCore =
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutinesCore}"
+    const val coroutinesAndroid =
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.coroutinesAndroid}"
+    const val coroutinesTest =
+        "org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.coroutinesTest}"
 }
 
 object Compose {

@@ -35,7 +35,6 @@ dependencies {
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
     implementation(project(Modules.models))
     implementation(Compose.composeUIUtil)
-    implementation(project(Modules.datasource))
     implementation(Android.ktxCore)
     implementation(Compose.composeNavigation)
     implementation(platform(Compose.composeBom))

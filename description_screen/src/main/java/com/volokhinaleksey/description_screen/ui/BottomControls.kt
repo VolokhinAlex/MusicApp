@@ -7,15 +7,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,7 +32,8 @@ import com.volokhinaleksey.description_screen.viewmodel.DescriptionMusicViewMode
 import com.volokhinaleksey.description_screen.viewmodel.REPEAT_MODE_ALL
 import com.volokhinaleksey.description_screen.viewmodel.REPEAT_MODE_OFF
 import com.volokhinaleksey.description_screen.viewmodel.REPEAT_MODE_ONE
-import com.volokhinaleksey.models.states.UIEvent
+import com.volokhinaleksey.models.states.UIMusicEvent
+import com.volokhinaleksey.models.ui.TrackUI
 
 @SuppressLint("PrivateResource")
 @Composable
@@ -37,23 +41,19 @@ fun BottomControls(
     progress: Float,
     duration: Long,
     songViewModel: DescriptionMusicViewModel,
-    onUiEvent: (UIEvent) -> Unit,
+    onUIMusicEvent: (UIMusicEvent) -> Unit,
     currentTime: () -> Long
 ) {
-    var shuffleMode by rememberSaveable {
-        mutableStateOf(false)
-    }
     var newProgressValue by remember { mutableStateOf(0f) }
     var useNewProgressValue by remember { mutableStateOf(false) }
     val musicTime = remember(currentTime()) { currentTime() }
-
     Column {
         Slider(
             value = if (useNewProgressValue) newProgressValue else progress,
             onValueChange = {
                 useNewProgressValue = true
                 newProgressValue = it
-                onUiEvent(UIEvent.UpdateProgress(newProgress = it))
+                onUIMusicEvent(UIMusicEvent.UpdateProgress(newProgress = it))
             },
             onValueChangeFinished = {
                 useNewProgressValue = false
@@ -76,21 +76,20 @@ fun BottomControls(
             )
         }
     }
-
     Row(modifier = Modifier.padding(0.dp, 20.dp)) {
         IconButton(
             onClick = {
                 when (songViewModel.currentRepeatMode.value) {
                     REPEAT_MODE_ONE -> {
-                        onUiEvent(UIEvent.RepeatMode(mode = REPEAT_MODE_OFF))
+                        onUIMusicEvent(UIMusicEvent.RepeatMode(mode = REPEAT_MODE_OFF))
                     }
 
                     REPEAT_MODE_ALL -> {
-                        onUiEvent(UIEvent.RepeatMode(mode = REPEAT_MODE_ONE))
+                        onUIMusicEvent(UIMusicEvent.RepeatMode(mode = REPEAT_MODE_ONE))
                     }
 
                     else -> {
-                        onUiEvent(UIEvent.RepeatMode(mode = REPEAT_MODE_ALL))
+                        onUIMusicEvent(UIMusicEvent.RepeatMode(mode = REPEAT_MODE_ALL))
                     }
                 }
             },
@@ -116,7 +115,7 @@ fun BottomControls(
             )
         }
         IconButton(
-            onClick = { onUiEvent(UIEvent.Prev) },
+            onClick = { onUIMusicEvent(UIMusicEvent.Prev) },
             modifier = Modifier.padding(end = 20.dp)
         ) {
             Icon(
@@ -128,7 +127,7 @@ fun BottomControls(
         }
         IconButton(
             onClick = {
-                onUiEvent(UIEvent.PlayPause)
+                onUIMusicEvent(UIMusicEvent.PlayPause)
             },
             modifier = Modifier.padding(end = 20.dp)
         ) {
@@ -144,7 +143,7 @@ fun BottomControls(
 
         IconButton(
             onClick = {
-                onUiEvent(UIEvent.Next)
+                onUIMusicEvent(UIMusicEvent.Next)
             },
             modifier = Modifier.padding(end = 20.dp)
         ) {
@@ -156,22 +155,21 @@ fun BottomControls(
             )
         }
 
+        val favoriteObject by songViewModel.getFavoriteSongByTitle(title = songViewModel.currentSong.value.title)
+            .collectAsState(initial = TrackUI())
         IconButton(
             onClick = {
-                onUiEvent(UIEvent.Shuffle)
-                shuffleMode = !shuffleMode
+                songViewModel.upsertFavoriteSong(trackUI = favoriteObject.copy(isFavorite = !favoriteObject.isFavorite))
             }
         ) {
             Icon(
-                painter = if (shuffleMode) {
-                    painterResource(androidx.media3.ui.R.drawable.exo_icon_shuffle_on)
+                imageVector = if (favoriteObject.isFavorite) {
+                    Icons.Default.Favorite
                 } else {
-                    painterResource(
-                        androidx.media3.ui.R.drawable.exo_icon_shuffle_off
-                    )
+                    Icons.Default.FavoriteBorder
                 },
-                contentDescription = "Shuffle",
-                tint = Color.White,
+                contentDescription = "Add Or Remove favorite song",
+                tint = if (favoriteObject.isFavorite) Color.Red else Color.White,
                 modifier = Modifier.size(30.dp)
             )
         }

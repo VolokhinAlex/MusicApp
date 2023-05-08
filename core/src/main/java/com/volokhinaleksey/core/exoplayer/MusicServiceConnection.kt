@@ -3,10 +3,13 @@ package com.volokhinaleksey.core.exoplayer
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
-import com.volokhinaleksey.models.local.Album
-import com.volokhinaleksey.models.local.Track
+import com.volokhinaleksey.core.utils.ALBUM_ID_BUNDLE
+import com.volokhinaleksey.core.utils.SONG_ID_BUNDLE
+import com.volokhinaleksey.core.utils.SONG_PATH_BUNDLE
 import com.volokhinaleksey.models.states.MediaState
 import com.volokhinaleksey.models.states.PlayerEvent
+import com.volokhinaleksey.models.ui.AlbumUI
+import com.volokhinaleksey.models.ui.TrackUI
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -22,8 +25,6 @@ class MusicServiceConnection(
 
     private val _mediaState = MutableStateFlow<MediaState>(MediaState.Initial)
     val mediaState = _mediaState.asStateFlow()
-
-    private val currentShuffleMode = true
 
     private var job: Job? = null
 
@@ -50,16 +51,18 @@ class MusicServiceConnection(
                     player.pause()
                     stopProgressUpdate()
                 } else {
-                    player.play()
-                    _mediaState.value = MediaState.Playing(isPlaying = true)
-                    startProgressUpdate()
+                    job.run {
+                        delay(500)
+                        player.play()
+                        _mediaState.value = MediaState.Playing(isPlaying = true)
+                        startProgressUpdate()
+                    }
                 }
             }
 
             PlayerEvent.Stop -> stopProgressUpdate()
             is PlayerEvent.UpdateProgress -> player.seekTo((player.duration * playerEvent.newProgress).toLong())
             is PlayerEvent.RepeatMode -> player.repeatMode = playerEvent.mode
-            PlayerEvent.Shuffle -> player.shuffleModeEnabled = !currentShuffleMode
         }
     }
 
@@ -68,20 +71,19 @@ class MusicServiceConnection(
             ExoPlayer.STATE_BUFFERING -> _mediaState.value =
                 MediaState.Buffering(player.currentPosition)
 
-            ExoPlayer.STATE_READY -> _mediaState.value =
-                MediaState.Ready(
-                    Track(
-                        id = 0,
-                        title = player.mediaMetadata.title?.toString(),
-                        album = Album(
-                            id = player.mediaMetadata.extras?.getLong("album_id") ?: 0,
-                            title = player.mediaMetadata.albumTitle?.toString() ?: ""
-                        ),
-                        artist = player.mediaMetadata.artist?.toString(),
-                        duration = player.duration,
-                        path = player.mediaMetadata.description?.toString()
-                    )
+            ExoPlayer.STATE_READY -> _mediaState.value = MediaState.Ready(
+                TrackUI(
+                    id = player.mediaMetadata.extras?.getLong(SONG_ID_BUNDLE) ?: 0,
+                    title = player.mediaMetadata.title?.toString() ?: "",
+                    albumUI = AlbumUI(
+                        id = player.mediaMetadata.extras?.getLong(ALBUM_ID_BUNDLE) ?: 0,
+                        title = player.mediaMetadata.albumTitle?.toString() ?: ""
+                    ),
+                    artist = player.mediaMetadata.artist?.toString() ?: "",
+                    duration = player.duration,
+                    path = player.mediaMetadata.extras?.getString(SONG_PATH_BUNDLE) ?: ""
                 )
+            )
 
             else -> super.onPlaybackStateChanged(playbackState)
         }

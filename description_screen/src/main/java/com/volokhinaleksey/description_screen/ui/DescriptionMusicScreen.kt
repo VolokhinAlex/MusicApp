@@ -15,7 +15,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,31 +29,26 @@ import com.volokhinaleksey.core.ui.widgets.ErrorMessage
 import com.volokhinaleksey.core.ui.widgets.LoadingProgressBar
 import com.volokhinaleksey.core.utils.getTrackImageUri
 import com.volokhinaleksey.description_screen.viewmodel.DescriptionMusicViewModel
-import com.volokhinaleksey.models.local.Track
 import com.volokhinaleksey.models.states.TrackState
-import com.volokhinaleksey.models.states.UIEvent
+import com.volokhinaleksey.models.states.UIMusicEvent
 import com.volokhinaleksey.models.states.UIState
+import com.volokhinaleksey.models.ui.TrackUI
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun DescriptionMusicScreen(
-    track: Track,
+    track: TrackUI,
     navController: NavController,
     songViewModel: DescriptionMusicViewModel = koinViewModel(),
     startService: () -> Unit,
 ) {
-    val songs = remember {
-        mutableStateListOf<Track>()
-    }
     val state by songViewModel.uiState.collectAsState()
     songViewModel.songs.observeAsState().value?.let {
         RenderTrackStateData(
-            currentTrack = track,
+            currentTrackUI = track,
             state = it,
             songViewModel = songViewModel
-        ) { tracks ->
-            songs.addAll(tracks)
-        }
+        )
     }
     Column(
         modifier = Modifier
@@ -75,23 +69,21 @@ fun DescriptionMusicScreen(
 
 @Composable
 private fun RenderTrackStateData(
-    currentTrack: Track,
+    currentTrackUI: TrackUI,
     state: TrackState,
-    songViewModel: DescriptionMusicViewModel,
-    tracks: (List<Track>) -> Unit
+    songViewModel: DescriptionMusicViewModel
 ) {
     when (state) {
         TrackState.Loading -> LoadingProgressBar()
         is TrackState.Error -> ErrorMessage(message = state.error)
         is TrackState.Success -> {
-            tracks(state.tracks)
             LaunchedEffect(key1 = true) {
                 songViewModel.loadData(
-                    tracks = state.tracks,
-                    currentSongPosition = state.tracks.indexOf(currentTrack),
+                    trackUI = state.tracks,
+                    currentSongPosition = state.tracks.indexOfFirst { it.title == currentTrackUI.title },
                     startDurationMs = 0
                 )
-                songViewModel.onUIEvent(UIEvent.PlayPause)
+                songViewModel.onUIEvent(UIMusicEvent.PlayPause)
             }
         }
     }
@@ -113,7 +105,7 @@ private fun RenderUIState(
             LaunchedEffect(true) {
                 startService()
             }
-            TopBarControls(navController = navController, track = track)
+            TopBarControls(navController = navController, trackUI = track)
             TrackImage(track = track)
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -123,7 +115,7 @@ private fun RenderUIState(
                 BottomControls(
                     duration = songViewModel.duration.value,
                     songViewModel = songViewModel,
-                    onUiEvent = songViewModel::onUIEvent,
+                    onUIMusicEvent = songViewModel::onUIEvent,
                     currentTime = { songViewModel.currentDuration.value },
                     progress = songViewModel.progress.value
                 )
@@ -134,7 +126,7 @@ private fun RenderUIState(
 
 
 @Composable
-fun TrackImage(track: Track) {
+fun TrackImage(track: TrackUI) {
     AsyncImage(
         model = getTrackImageUri(track),
         contentDescription = "Music Picture",
@@ -146,15 +138,15 @@ fun TrackImage(track: Track) {
 }
 
 @Composable
-fun TrackInformation(track: Track) {
+fun TrackInformation(track: TrackUI) {
     Text(
-        text = "${track.title}",
+        text = track.title,
         fontSize = 25.sp,
         color = Color.White,
         textAlign = TextAlign.Center
     )
     Text(
-        text = if (track.artist.equals("<unknown>")) "Unknown artist" else "${track.artist}",
+        text = if (track.artist == "<unknown>") "Unknown artist" else track.artist,
         fontSize = 20.sp,
         color = Color.White,
         textAlign = TextAlign.Center
