@@ -1,20 +1,18 @@
 package com.volokhinaleksey.datasource.home
 
-import com.volokhinaleksey.models.local.FavoriteEntity
 import com.volokhinaleksey.models.local.LocalTrack
-import com.volokhinaleksey.models.local.SongEntity
 import kotlinx.coroutines.flow.Flow
+
+/**
+ * The data source object for the home screen
+ */
 
 interface HomeDataSource {
 
-    suspend fun getSongs(query: Array<String>): List<LocalTrack>
+    /**
+     * Method for getting a list of favorite songs
+     */
 
     fun getFavoriteSongs(): Flow<List<LocalTrack>>
 
-    suspend fun insertFavoriteSong(favoriteEntity: FavoriteEntity)
-
-    suspend fun insertSong(songEntity: SongEntity)
-
-    suspend fun upsertFavoriteSong(favoriteEntity: FavoriteEntity)
-    fun getFavoriteSongByTitle(title: String): Flow<LocalTrack>
 }

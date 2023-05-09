@@ -4,6 +4,9 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
 import androidx.core.os.bundleOf
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -15,17 +18,27 @@ import com.volokhinaleksey.core.utils.ALBUM_ID_BUNDLE
 import com.volokhinaleksey.core.utils.REPEAT_MODE_OFF
 import com.volokhinaleksey.core.utils.SONG_ID_BUNDLE
 import com.volokhinaleksey.core.utils.SONG_PATH_BUNDLE
+import com.volokhinaleksey.core.utils.currentSongAlbumIdKey
+import com.volokhinaleksey.core.utils.currentSongAlbumTitleKey
+import com.volokhinaleksey.core.utils.currentSongArtistKey
+import com.volokhinaleksey.core.utils.currentSongDurationKey
+import com.volokhinaleksey.core.utils.currentSongIdKey
+import com.volokhinaleksey.core.utils.currentSongPathKey
+import com.volokhinaleksey.core.utils.currentSongTitleKey
 import com.volokhinaleksey.models.states.MediaState
 import com.volokhinaleksey.models.states.PlayerEvent
 import com.volokhinaleksey.models.states.UIMusicEvent
 import com.volokhinaleksey.models.states.UIState
+import com.volokhinaleksey.models.ui.AlbumUI
 import com.volokhinaleksey.models.ui.TrackUI
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 abstract class BaseViewModel<T : Any>(
-    private val simpleMediaServiceHandler: MusicServiceConnection
+    private val simpleMediaServiceHandler: MusicServiceConnection,
+    private val dataStore: DataStore<Preferences>
 ) : ViewModel() {
 
     protected val mutableData: MutableLiveData<T> = MutableLiveData()
@@ -53,6 +66,7 @@ abstract class BaseViewModel<T : Any>(
     val currentSong: State<TrackUI> = _currentSong
 
     init {
+        //getTrackData()
         viewModelScope.launch {
             simpleMediaServiceHandler.mediaState.collect { mediaState ->
                 when (mediaState) {
@@ -62,6 +76,7 @@ abstract class BaseViewModel<T : Any>(
                     is MediaState.Progress -> calculateProgressValues(mediaState.progress)
                     is MediaState.Ready -> {
                         _currentSong.value = mediaState.trackUI
+                       // saveTrackData(track = _currentSong.value)
                         _duration.value = _currentSong.value.duration
                         _uiState.value = UIState.Ready
                     }
@@ -70,7 +85,7 @@ abstract class BaseViewModel<T : Any>(
         }
     }
 
-    protected fun calculateProgressValues(currentProgress: Long) {
+    private fun calculateProgressValues(currentProgress: Long) {
         _progress.value =
             if (currentProgress > 0) (currentProgress.toFloat() / _duration.value) else 0f
         _currentDuration.value = currentProgress
@@ -127,5 +142,37 @@ abstract class BaseViewModel<T : Any>(
             currentSongPosition = currentSongPosition,
             startDurationMs = startDurationMs
         )
+    }
+
+    private suspend fun saveTrackData(track: TrackUI) {
+        dataStore.edit { preferences ->
+            preferences[currentSongTitleKey] = track.title
+            preferences[currentSongIdKey] = track.id
+            preferences[currentSongAlbumIdKey] = track.albumUI.id
+            preferences[currentSongAlbumTitleKey] = track.albumUI.title
+            preferences[currentSongArtistKey] = track.artist
+            preferences[currentSongDurationKey] = track.duration
+            preferences[currentSongPathKey] = track.path
+        }
+    }
+
+    private fun getTrackData() {
+        viewModelScope.launch {
+            dataStore.data.map { preferences ->
+                TrackUI(
+                    id = preferences[currentSongIdKey] ?: 0,
+                    title = preferences[currentSongTitleKey].orEmpty(),
+                    albumUI = AlbumUI(
+                        id = preferences[currentSongAlbumIdKey] ?: 0,
+                        title = preferences[currentSongAlbumTitleKey].orEmpty()
+                    ),
+                    artist = preferences[currentSongArtistKey].orEmpty(),
+                    duration = preferences[currentSongDurationKey] ?: 0,
+                    path = preferences[currentSongPathKey].orEmpty(),
+                )
+            }.collect {
+                _currentSong.value = it
+            }
+        }
     }
 }
