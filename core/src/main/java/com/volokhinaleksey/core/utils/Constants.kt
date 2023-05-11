@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 const val ALBUM_ID_BUNDLE = "album_id"
 const val SONG_PATH_BUNDLE = "song_path"
 const val SONG_ID_BUNDLE = "song_id"
+const val SONG_DURATION_BUNDLE = "song_duration"
 
 // Database
 const val MUSIC_DATABASE_NAME = "music_database.db"

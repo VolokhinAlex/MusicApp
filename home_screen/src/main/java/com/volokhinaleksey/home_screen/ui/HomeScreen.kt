@@ -129,7 +129,7 @@ private fun RenderUIState(
     startService: () -> Unit
 ) {
     when (state) {
-        UIState.Initial -> LoadingProgressBar()
+        UIState.Initial -> {}
         is UIState.Ready -> {
             val track by remember { songViewModel.currentSong }
             LaunchedEffect(true) { startService() }
