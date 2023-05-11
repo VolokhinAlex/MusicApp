@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface HomeDataSource {
 
-    suspend fun getSongs(): List<LocalTrack>
+    suspend fun getSongs(query: Array<String>): List<LocalTrack>
 
     fun getFavoriteSongs(): Flow<List<LocalTrack>>
 

@@ -59,13 +59,17 @@ fun SearchBar(
 
         AnimatedVisibility(visible = focused) {
             IconButton(
-                modifier = Modifier.padding(start = 2.dp),
+                modifier = Modifier.padding(start = 2.dp, top = 20.dp),
                 onClick = {
                     focusManager.clearFocus()
                     keyboardController?.hide()
                     onBack()
                 }) {
-                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = null,
+                    tint = Color.White
+                )
             }
         }
 

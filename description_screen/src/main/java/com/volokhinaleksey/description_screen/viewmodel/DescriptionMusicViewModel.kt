@@ -84,7 +84,9 @@ class DescriptionMusicViewModel(
         viewModelScope.launch(dispatcher + CoroutineExceptionHandler { _, throwable ->
             _songs.postValue(TrackState.Error(throwable.localizedMessage.orEmpty()))
         }) {
-            _songs.postValue(mainInteractor.getSongs())
+            _songs.postValue(
+                mainInteractor.getSongs(query = arrayOf())
+            )
         }
     }
 

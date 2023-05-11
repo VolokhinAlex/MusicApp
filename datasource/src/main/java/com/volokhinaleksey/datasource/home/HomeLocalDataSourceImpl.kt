@@ -16,13 +16,13 @@ class HomeLocalDataSourceImpl(
     private val db: MusicDatabase
 ) : HomeDataSource {
 
-    override suspend fun getSongs(): List<LocalTrack> {
+    override suspend fun getSongs(query: Array<String>): List<LocalTrack> {
         val songs = mutableListOf<LocalTrack>()
         val cursor = context.contentResolver.query(
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
             null,
-            StringBuilder("is_music != 0 AND title != ''").toString(),
-            null,
+            if (query.isEmpty()) "is_music != 0 AND ${MediaStore.Audio.Media.TITLE} != ''" else "is_music != 0 AND ${MediaStore.Audio.Media.TITLE} LIKE ?",
+            query,
             "${MediaStore.Audio.Media.DISPLAY_NAME} ASC"
         )
         if (cursor != null && cursor.moveToFirst()) {
