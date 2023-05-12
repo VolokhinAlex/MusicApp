@@ -15,7 +15,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -36,6 +39,8 @@ import com.volokhinaleksey.core.ui.widgets.rememberSearchState
 import com.volokhinaleksey.home_screen.R
 import com.volokhinaleksey.home_screen.viewmodel.HomeScreenViewModel
 import com.volokhinaleksey.models.states.TrackState
+import com.volokhinaleksey.models.states.UIState
+import com.volokhinaleksey.models.ui.AlbumUI
 import com.volokhinaleksey.models.ui.TrackUI
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
@@ -51,9 +56,11 @@ private val padding20DP = 20.dp
 @Composable
 fun HomeScreen(
     homeScreenViewModel: HomeScreenViewModel = koinViewModel(),
-    navController: NavController
+    navController: NavController,
+    startService: () -> Unit
 ) {
     val state = rememberSearchState()
+    val songs = remember { mutableStateListOf<TrackUI>() }
     Scaffold(
         topBar = {
             SearchBar(
@@ -69,13 +76,41 @@ fun HomeScreen(
             LaunchedEffect(state.query.text) {
                 state.searching = true
                 delay(300)
-                homeScreenViewModel.getSongs(arrayOf("%${state.query.text}%"))
+                if (state.focused) {
+                    homeScreenViewModel.getSongs(arrayOf("%${state.query.text}%"))
+                }
                 state.searching = false
             }
+        },
+        bottomBar = {
+            val uiState by homeScreenViewModel.uiState.collectAsState()
+            val currentTrackUI = TrackUI(
+                id = 1000011569,
+                title = "Мари Краймбрери  -  Мне так хорошо ",
+                albumUI = AlbumUI(id = 6994005807715970951, title = "muzrecord.net"),
+                artist = "<unknown>",
+                duration = 206655,
+                path = "/storage/emulated/0/Download/1573063803_mari_kraymbreri__mne_tak_xorosho_.mp3",
+                isFavorite = false
+            )
+            if (songs.isNotEmpty()) {
+                LaunchedEffect(key1 = true) {
+                    homeScreenViewModel.loadData(
+                        trackUI = songs,
+                        currentSongPosition = songs.indexOfFirst { it.title == currentTrackUI.title },
+                        startDurationMs = 0
+                    )
+                }
+            }
+            RenderUIState(
+                state = uiState,
+                songViewModel = homeScreenViewModel,
+                navController = navController,
+                startService = startService
+            )
         }
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
-
             homeScreenViewModel.getFavoriteSongs().collectAsState(initial = emptyList()).value.let {
                 RenderFavoriteSongsData(favoriteTracks = it, navController = navController)
             }
@@ -88,8 +123,37 @@ fun HomeScreen(
             )
 
             homeScreenViewModel.data.observeAsState().value?.let { trackState ->
-                RenderSongsData(state = trackState, navController = navController)
+                RenderSongsData(state = trackState, navController = navController) {
+                    songs.addAll(it)
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun RenderUIState(
+    state: UIState,
+    songViewModel: HomeScreenViewModel,
+    navController: NavController,
+    startService: () -> Unit
+) {
+    when (state) {
+        UIState.Initial -> LoadingProgressBar()
+        is UIState.Ready -> {
+            val track by remember { songViewModel.currentSong }
+            LaunchedEffect(true) { startService() }
+            SongBottomBar(
+                onUIMusicEvent = songViewModel::onUIEvent,
+                track = track,
+                songViewModel = songViewModel,
+                onClickAction = {
+                    navController.navigate(
+                        route = ScreenState.DescriptionMusicScreen.route,
+                        bundleOf(DATA_KEY to it)
+                    )
+                }
+            )
         }
     }
 }
@@ -97,13 +161,15 @@ fun HomeScreen(
 @Composable
 private fun RenderSongsData(
     state: TrackState,
-    navController: NavController
+    navController: NavController,
+    tracks: (List<TrackUI>) -> Unit
 ) {
     when (state) {
         is TrackState.Error -> ErrorMessage(message = state.error)
         TrackState.Loading -> LoadingProgressBar()
         is TrackState.Success -> {
             val songs = state.tracks
+            tracks(songs)
             LazyColumn {
                 itemsIndexed(songs) { _, item ->
                     CardMusic(item) {

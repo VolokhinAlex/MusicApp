@@ -46,9 +46,10 @@ dependencies {
     implementation project(Modules.interactors)
     implementation project(Modules.repositories)
     implementation project(Modules.datasource)
+    implementation platform(Compose.composeBom)
+    implementation Jetpack.datastore
     implementation Android.ktxCore
     implementation Compose.activityCompose
-    implementation platform(Compose.composeBom)
     implementation Compose.composeNavigation
     implementation Compose.composeUI
     implementation Compose.composePermission

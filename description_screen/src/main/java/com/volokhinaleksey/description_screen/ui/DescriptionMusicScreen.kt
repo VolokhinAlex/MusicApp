@@ -43,7 +43,7 @@ fun DescriptionMusicScreen(
     startService: () -> Unit,
 ) {
     val state by songViewModel.uiState.collectAsState()
-    songViewModel.songs.observeAsState().value?.let {
+    songViewModel.data.observeAsState().value?.let {
         RenderTrackStateData(
             currentTrackUI = track,
             state = it,
@@ -123,7 +123,6 @@ private fun RenderUIState(
         }
     }
 }
-
 
 @Composable
 fun TrackImage(track: TrackUI) {

@@ -34,6 +34,7 @@ android {
 dependencies {
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
     implementation(project(Modules.models))
+    implementation(Jetpack.datastore)
     implementation(Compose.composeUIUtil)
     implementation(Android.ktxCore)
     implementation(Compose.composeNavigation)

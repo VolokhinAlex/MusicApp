@@ -72,7 +72,7 @@ class MainActivity : ComponentActivity() {
             startDestination = ScreenState.HomeScreen.route
         ) {
             composable(route = ScreenState.HomeScreen.route) {
-                HomeScreen(navController = navController)
+                HomeScreen(navController = navController, startService = { startService() })
             }
             composable(route = ScreenState.DescriptionMusicScreen.route) {
                 val trackUI = it.arguments?.parcelable<TrackUI>()

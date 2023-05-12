@@ -14,6 +14,9 @@ object Releases {
 }
 
 object Versions {
+    // JetPack Datastore
+    const val datastore = "1.1.0-alpha01"
+
     // Android Ktx
     const val ktxCore = "1.9.0"
 
@@ -116,7 +119,6 @@ object ExoPlayer {
 }
 
 object Tests {
-
     const val junit = "junit:junit:${Versions.junit}"
     const val espresso = "androidx.test.espresso:espresso-core:${Versions.espresso}"
     const val extJunit = "androidx.test.ext:junit:${Versions.extJunit}"
@@ -129,8 +131,6 @@ object Koin {
     const val koinTest = "io.insert-koin:koin-test:${Versions.koinTest}"
     const val koinCompose = "io.insert-koin:koin-androidx-compose:${Versions.koinCompose}"
 }
-
-object Lifecycle {
-    const val lifecycleRuntimeKtx =
-        "androidx.lifecycle:lifecycle-runtime-ktx:${Versions.lifecycleRuntimeKtx}"
+object Jetpack {
+    const val datastore = "androidx.datastore:datastore-preferences:${Versions.datastore}"
 }
