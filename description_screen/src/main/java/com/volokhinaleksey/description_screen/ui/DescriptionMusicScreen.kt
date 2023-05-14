@@ -15,7 +15,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,6 +30,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.volokhinaleksey.core.ui.widgets.ErrorMessage
 import com.volokhinaleksey.core.ui.widgets.LoadingProgressBar
+import com.volokhinaleksey.core.ui.widgets.SongPopupMenu
 import com.volokhinaleksey.core.utils.getTrackImageUri
 import com.volokhinaleksey.description_screen.viewmodel.DescriptionMusicViewModel
 import com.volokhinaleksey.models.states.TrackState
@@ -96,6 +100,7 @@ private fun RenderUIState(
     navController: NavController,
     startService: () -> Unit
 ) {
+    var expandedPopupMenu by rememberSaveable { mutableStateOf(false) }
     when (state) {
         UIState.Initial -> LoadingProgressBar()
         is UIState.Ready -> {
@@ -105,7 +110,19 @@ private fun RenderUIState(
             LaunchedEffect(true) {
                 startService()
             }
-            TopBarControls(navController = navController, trackUI = track)
+            TopBarControls(
+                navController = navController,
+                trackUI = track,
+                onPopupMenuAction = {
+                    expandedPopupMenu = !expandedPopupMenu
+                },
+                onPopupMenu = {
+                    SongPopupMenu(
+                        state = expandedPopupMenu,
+                        track = track,
+                        onChangeState = { expandedPopupMenu = false })
+                }
+            )
             TrackImage(track = track)
             Column(
                 modifier = Modifier.fillMaxWidth(),

@@ -1,6 +1,7 @@
 package com.volokhinaleksey.description_screen.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
@@ -20,7 +21,12 @@ import androidx.navigation.NavController
 import com.volokhinaleksey.models.ui.TrackUI
 
 @Composable
-fun TopBarControls(navController: NavController, trackUI: TrackUI) {
+fun TopBarControls(
+    navController: NavController,
+    trackUI: TrackUI,
+    onPopupMenuAction: () -> Unit,
+    onPopupMenu: @Composable () -> Unit,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -42,14 +48,17 @@ fun TopBarControls(navController: NavController, trackUI: TrackUI) {
             textAlign = TextAlign.Center
         )
 
-        IconButton(
-            onClick = { }
-        ) {
-            Icon(
-                imageVector = Icons.Filled.MoreVert,
-                contentDescription = Icons.Filled.MoreVert.name,
-                tint = Color.White
-            )
+        Box {
+            IconButton(
+                onClick = onPopupMenuAction
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.MoreVert,
+                    contentDescription = Icons.Filled.MoreVert.name,
+                    tint = Color.White
+                )
+            }
+            onPopupMenu()
         }
     }
 }
