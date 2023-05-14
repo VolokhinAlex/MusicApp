@@ -37,6 +37,7 @@ dependencies {
     implementation(project(Modules.models))
     implementation(project(Modules.interactors))
     implementation(Android.ktxCore)
+    implementation(Jetpack.datastore)
     implementation(Compose.composeNavigation)
     implementation(Compose.composeViewModel)
     implementation(Compose.composeLiveData)

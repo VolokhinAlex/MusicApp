@@ -1,20 +1,26 @@
-package com.volokhinaleksey.datasource.home
+package com.volokhinaleksey.datasource.main
 
 import android.content.Context
 import android.provider.MediaStore
-import com.volokhinaleksey.core.utils.mapSongEntityToLocalTrack
 import com.volokhinaleksey.database.MusicDatabase
 import com.volokhinaleksey.models.local.FavoriteEntity
 import com.volokhinaleksey.models.local.LocalAlbum
 import com.volokhinaleksey.models.local.LocalTrack
 import com.volokhinaleksey.models.local.SongEntity
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 
-class HomeLocalDataSourceImpl(
+/**
+ * Implementation of the main local data source
+ */
+
+class MainLocalDataSourceImpl(
     private val context: Context,
     private val db: MusicDatabase
-) : HomeDataSource {
+) : MainDataSource {
+
+    /**
+     * Method for getting a list of songs from a data source
+     * @param query - An additional condition for obtaining data on it
+     */
 
     override suspend fun getSongs(query: Array<String>): List<LocalTrack> {
         val songs = mutableListOf<LocalTrack>()
@@ -57,38 +63,31 @@ class HomeLocalDataSourceImpl(
         return songs
     }
 
-    override fun getFavoriteSongs(): Flow<List<LocalTrack>> {
-        return db.favoriteDao().all().map {
-            it.map { favorite ->
-                val song = db.songDao().getSongByTitle(title = favorite.title)
-                mapSongEntityToLocalTrack(
-                    songEntity = song,
-                    favoriteEntity = favorite
-                )
-            }
-        }
-    }
+    /**
+     * Method for inserting a favorite song into a database table
+     * @param favoriteEntity - The object of the favorite song
+     */
 
     override suspend fun insertFavoriteSong(favoriteEntity: FavoriteEntity) {
         db.favoriteDao().insert(entity = favoriteEntity)
     }
 
+    /**
+     * Method for adding a song to a database table
+     * @param songEntity - The song to add to the database
+     */
+
     override suspend fun insertSong(songEntity: SongEntity) {
         db.songDao().insert(entity = songEntity)
     }
 
+    /**
+     * Method for adding/updating data of a favorite song
+     * @param favoriteEntity - The object of the favorite song
+     */
+
     override suspend fun upsertFavoriteSong(favoriteEntity: FavoriteEntity) {
         db.favoriteDao().upsert(entity = favoriteEntity)
-    }
-
-    override fun getFavoriteSongByTitle(title: String): Flow<LocalTrack> {
-        return db.favoriteDao().getFavoriteMusicByTitle(title = title).map {
-            val song = db.songDao().getSongByTitle(title = it.title)
-            mapSongEntityToLocalTrack(
-                songEntity = song,
-                favoriteEntity = it
-            )
-        }
     }
 
 }

@@ -40,7 +40,6 @@ import com.volokhinaleksey.home_screen.R
 import com.volokhinaleksey.home_screen.viewmodel.HomeScreenViewModel
 import com.volokhinaleksey.models.states.TrackState
 import com.volokhinaleksey.models.states.UIState
-import com.volokhinaleksey.models.ui.AlbumUI
 import com.volokhinaleksey.models.ui.TrackUI
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
@@ -84,20 +83,11 @@ fun HomeScreen(
         },
         bottomBar = {
             val uiState by homeScreenViewModel.uiState.collectAsState()
-            val currentTrackUI = TrackUI(
-                id = 1000011569,
-                title = "Мари Краймбрери  -  Мне так хорошо ",
-                albumUI = AlbumUI(id = 6994005807715970951, title = "muzrecord.net"),
-                artist = "<unknown>",
-                duration = 206655,
-                path = "/storage/emulated/0/Download/1573063803_mari_kraymbreri__mne_tak_xorosho_.mp3",
-                isFavorite = false
-            )
             if (songs.isNotEmpty()) {
                 LaunchedEffect(key1 = true) {
                     homeScreenViewModel.loadData(
                         trackUI = songs,
-                        currentSongPosition = songs.indexOfFirst { it.title == currentTrackUI.title },
+                        currentSongPosition = songs.indexOfFirst { it.title == homeScreenViewModel.currentSong.value.title },
                         startDurationMs = 0
                     )
                 }
