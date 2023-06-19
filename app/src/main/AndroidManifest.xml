@@ -33,6 +33,7 @@
             </intent-filter>
         </activity>
         <service android:name="com.volokhinaleksey.core.exoplayer.MusicService"
+            android:foregroundServiceType="mediaPlayback"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.media.browse.MediaBrowserService" />

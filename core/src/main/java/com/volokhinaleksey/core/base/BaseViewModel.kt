@@ -16,6 +16,7 @@ import androidx.media3.common.MediaMetadata
 import com.volokhinaleksey.core.exoplayer.MusicServiceConnection
 import com.volokhinaleksey.core.utils.ALBUM_ID_BUNDLE
 import com.volokhinaleksey.core.utils.REPEAT_MODE_OFF
+import com.volokhinaleksey.core.utils.SONG_DURATION_BUNDLE
 import com.volokhinaleksey.core.utils.SONG_ID_BUNDLE
 import com.volokhinaleksey.core.utils.SONG_PATH_BUNDLE
 import com.volokhinaleksey.core.utils.currentSongAlbumIdKey
@@ -25,11 +26,11 @@ import com.volokhinaleksey.core.utils.currentSongDurationKey
 import com.volokhinaleksey.core.utils.currentSongIdKey
 import com.volokhinaleksey.core.utils.currentSongPathKey
 import com.volokhinaleksey.core.utils.currentSongTitleKey
+import com.volokhinaleksey.core.utils.mapDataPreferencesToTrackUI
 import com.volokhinaleksey.models.states.MediaState
 import com.volokhinaleksey.models.states.PlayerEvent
 import com.volokhinaleksey.models.states.UIMusicEvent
 import com.volokhinaleksey.models.states.UIState
-import com.volokhinaleksey.models.ui.AlbumUI
 import com.volokhinaleksey.models.ui.TrackUI
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,17 +67,17 @@ abstract class BaseViewModel<T : Any>(
     val currentSong: State<TrackUI> = _currentSong
 
     init {
-        //getTrackData()
+        getTrackData()
         viewModelScope.launch {
             simpleMediaServiceHandler.mediaState.collect { mediaState ->
                 when (mediaState) {
-                    is MediaState.Buffering -> calculateProgressValues(mediaState.progress)
+                    is MediaState.Buffering -> calculateProgressValues(currentProgress = mediaState.progress)
                     MediaState.Initial -> _uiState.value = UIState.Initial
                     is MediaState.Playing -> _isPlaying.value = mediaState.isPlaying
-                    is MediaState.Progress -> calculateProgressValues(mediaState.progress)
+                    is MediaState.Progress -> calculateProgressValues(currentProgress = mediaState.progress)
                     is MediaState.Ready -> {
                         _currentSong.value = mediaState.trackUI
-                       // saveTrackData(track = _currentSong.value)
+                        saveTrackData(track = mediaState.trackUI)
                         _duration.value = _currentSong.value.duration
                         _uiState.value = UIState.Ready
                     }
@@ -125,7 +126,8 @@ abstract class BaseViewModel<T : Any>(
                         bundleOf(
                             ALBUM_ID_BUNDLE to it.albumUI.id,
                             SONG_PATH_BUNDLE to it.path,
-                            SONG_ID_BUNDLE to it.id
+                            SONG_ID_BUNDLE to it.id,
+                            SONG_DURATION_BUNDLE to it.duration
                         )
                     ).build()
                 val mediaItem =
@@ -158,21 +160,10 @@ abstract class BaseViewModel<T : Any>(
 
     private fun getTrackData() {
         viewModelScope.launch {
-            dataStore.data.map { preferences ->
-                TrackUI(
-                    id = preferences[currentSongIdKey] ?: 0,
-                    title = preferences[currentSongTitleKey].orEmpty(),
-                    albumUI = AlbumUI(
-                        id = preferences[currentSongAlbumIdKey] ?: 0,
-                        title = preferences[currentSongAlbumTitleKey].orEmpty()
-                    ),
-                    artist = preferences[currentSongArtistKey].orEmpty(),
-                    duration = preferences[currentSongDurationKey] ?: 0,
-                    path = preferences[currentSongPathKey].orEmpty(),
-                )
-            }.collect {
-                _currentSong.value = it
-            }
+            dataStore.data.map { preferences -> mapDataPreferencesToTrackUI(preferences = preferences) }
+                .collect {
+                    _currentSong.value = it
+                }
         }
     }
 }

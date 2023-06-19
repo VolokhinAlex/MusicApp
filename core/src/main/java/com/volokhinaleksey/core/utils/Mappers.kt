@@ -1,5 +1,6 @@
 package com.volokhinaleksey.core.utils
 
+import androidx.datastore.preferences.core.Preferences
 import com.volokhinaleksey.models.local.FavoriteEntity
 import com.volokhinaleksey.models.local.LocalAlbum
 import com.volokhinaleksey.models.local.LocalTrack
@@ -79,5 +80,19 @@ fun mapLocalTrackToTrackUI(localTrack: LocalTrack): TrackUI {
         duration = localTrack.duration ?: 0,
         path = localTrack.path.orEmpty(),
         isFavorite = localTrack.isFavorite ?: false
+    )
+}
+
+fun mapDataPreferencesToTrackUI(preferences: Preferences) : TrackUI {
+    return TrackUI(
+        id = preferences[currentSongIdKey] ?: 0,
+        title = preferences[currentSongTitleKey].orEmpty(),
+        albumUI = AlbumUI(
+            id = preferences[currentSongAlbumIdKey] ?: 0,
+            title = preferences[currentSongAlbumTitleKey].orEmpty()
+        ),
+        artist = preferences[currentSongArtistKey].orEmpty(),
+        duration = preferences[currentSongDurationKey] ?: 0,
+        path = preferences[currentSongPathKey].orEmpty(),
     )
 }

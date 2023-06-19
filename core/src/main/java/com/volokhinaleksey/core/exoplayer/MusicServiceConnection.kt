@@ -1,12 +1,18 @@
 package com.volokhinaleksey.core.exoplayer
 
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.volokhinaleksey.core.utils.ALBUM_ID_BUNDLE
+import com.volokhinaleksey.core.utils.SONG_DURATION_BUNDLE
 import com.volokhinaleksey.core.utils.SONG_ID_BUNDLE
 import com.volokhinaleksey.core.utils.SONG_PATH_BUNDLE
+import com.volokhinaleksey.core.utils.currentSongPositionKey
+import com.volokhinaleksey.core.utils.mapDataPreferencesToTrackUI
 import com.volokhinaleksey.models.states.MediaState
 import com.volokhinaleksey.models.states.PlayerEvent
 import com.volokhinaleksey.models.ui.AlbumUI
@@ -18,21 +24,42 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
+@OptIn(DelicateCoroutinesApi::class)
 class MusicServiceConnection(
     private val player: Player
-) : Player.Listener {
+) : Player.Listener, KoinComponent {
 
     private val _mediaState = MutableStateFlow<MediaState>(MediaState.Initial)
     val mediaState = _mediaState.asStateFlow()
+
+    private val datastore: DataStore<Preferences> by inject()
 
     private var job: Job? = null
 
     private var currentPosition = 0L
     private var currentTrack = TrackUI()
+    private var isCurrentTrackPlaying = false
 
     init {
+        GlobalScope.launch {
+            val currentTrackData =
+                datastore.data.map { mapDataPreferencesToTrackUI(preferences = it) }.first()
+            val currentSongPosition = datastore.data.map {
+                it[currentSongPositionKey]
+            }.first()
+            currentSongPosition?.let {
+                if (it != 0L) {
+                    currentPosition = it
+                }
+            }
+            currentTrack = currentTrackData
+        }
         player.addListener(this)
         job = Job()
     }
@@ -91,17 +118,18 @@ class MusicServiceConnection(
     }
 
     override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
-        val track = TrackUI(
-            id = mediaMetadata.extras?.getLong(SONG_ID_BUNDLE) ?: 0,
-            title = mediaMetadata.title?.toString() ?: "",
-            albumUI = AlbumUI(
-                id = mediaMetadata.extras?.getLong(ALBUM_ID_BUNDLE) ?: 0,
-                title = mediaMetadata.albumTitle?.toString() ?: ""
-            ),
-            artist = mediaMetadata.artist?.toString() ?: "",
-            duration = player.duration,
-            path = mediaMetadata.extras?.getString(SONG_PATH_BUNDLE) ?: ""
-        )
+        val track =
+            TrackUI(
+                id = mediaMetadata.extras?.getLong(SONG_ID_BUNDLE) ?: 0,
+                title = mediaMetadata.title?.toString() ?: "",
+                albumUI = AlbumUI(
+                    id = mediaMetadata.extras?.getLong(ALBUM_ID_BUNDLE) ?: 0,
+                    title = mediaMetadata.albumTitle?.toString() ?: ""
+                ),
+                artist = mediaMetadata.artist?.toString() ?: "",
+                duration = mediaMetadata.extras?.getLong(SONG_DURATION_BUNDLE) ?: player.duration,
+                path = mediaMetadata.extras?.getString(SONG_PATH_BUNDLE) ?: ""
+            )
         _mediaState.value = MediaState.Ready(track)
         if (currentTrack.title == track.title && currentPosition != 0L) {
             player.seekTo(currentPosition)
@@ -112,29 +140,34 @@ class MusicServiceConnection(
         super.onMediaMetadataChanged(mediaMetadata)
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     override fun onIsPlayingChanged(isPlaying: Boolean) {
-        _mediaState.value = MediaState.Playing(isPlaying = isPlaying)
-        if (isPlaying) {
+        isCurrentTrackPlaying = isPlaying
+        _mediaState.value = MediaState.Playing(isPlaying = isCurrentTrackPlaying)
+        if (isCurrentTrackPlaying) {
             GlobalScope.launch(Dispatchers.Main) {
                 startProgressUpdate()
             }
         } else {
             stopProgressUpdate()
         }
-        super.onIsPlayingChanged(isPlaying)
+        super.onIsPlayingChanged(isCurrentTrackPlaying)
     }
 
     private suspend fun startProgressUpdate() = job.run {
-        while (true) {
+        while (isCurrentTrackPlaying) {
             delay(500)
+            _mediaState.value = MediaState.Playing(isPlaying = isCurrentTrackPlaying)
             currentPosition = player.currentPosition
             _mediaState.value = MediaState.Progress(player.currentPosition)
+            datastore.edit {
+                it[currentSongPositionKey] = player.currentPosition
+            }
         }
     }
 
     private fun stopProgressUpdate() {
+        isCurrentTrackPlaying = false
         job?.cancel()
-        _mediaState.value = MediaState.Playing(isPlaying = false)
+        _mediaState.value = MediaState.Playing(isPlaying = isCurrentTrackPlaying)
     }
 }
