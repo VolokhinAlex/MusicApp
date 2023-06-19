@@ -2,6 +2,7 @@ package com.volokhinaleksey.core.ui.widgets
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,11 +27,16 @@ import com.volokhinaleksey.core.utils.getTrackImageUri
 import com.volokhinaleksey.models.ui.TrackUI
 
 @Composable
-fun CardMusic(track: TrackUI, onActionClick: () -> Unit) {
+fun CardMusic(
+    track: TrackUI,
+    onPopupMenuAction: () -> Unit,
+    onPopupMenu: @Composable () -> Unit,
+    onClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .clickable { onActionClick.invoke() }
+            .clickable { onClick.invoke() }
             .padding(start = 20.dp, end = 20.dp, bottom = 15.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -54,15 +60,17 @@ fun CardMusic(track: TrackUI, onActionClick: () -> Unit) {
                 )
             }
         }
-        IconButton(
-            onClick = { },
-            modifier = Modifier.padding(end = 10.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.MoreVert,
-                contentDescription = Icons.Filled.MoreVert.name,
-                tint = Color.White
-            )
+        Box {
+            IconButton(
+                onClick = onPopupMenuAction
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.MoreVert,
+                    contentDescription = Icons.Filled.MoreVert.name,
+                    tint = Color.White
+                )
+            }
+            onPopupMenu()
         }
     }
 }

@@ -2,4 +2,6 @@
 <resources>
     <string name="home_screen">Home</string>
     <string name="description_screen">Description Music</string>
+    <string name="add_favorite">Add to Favorite</string>
+    <string name="share">Share</string>
 </resources>

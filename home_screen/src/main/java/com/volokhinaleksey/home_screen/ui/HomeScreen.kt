@@ -18,7 +18,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -35,6 +38,7 @@ import com.volokhinaleksey.core.ui.widgets.ErrorMessage
 import com.volokhinaleksey.core.ui.widgets.LoadingProgressBar
 import com.volokhinaleksey.core.ui.widgets.PagerFavoriteCardMusic
 import com.volokhinaleksey.core.ui.widgets.SearchBar
+import com.volokhinaleksey.core.ui.widgets.SongPopupMenu
 import com.volokhinaleksey.core.ui.widgets.rememberSearchState
 import com.volokhinaleksey.home_screen.R
 import com.volokhinaleksey.home_screen.viewmodel.HomeScreenViewModel
@@ -162,12 +166,24 @@ private fun RenderSongsData(
             tracks(songs)
             LazyColumn {
                 itemsIndexed(songs) { _, item ->
-                    CardMusic(item) {
-                        navController.navigate(
-                            route = ScreenState.DescriptionMusicScreen.route,
-                            bundleOf(DATA_KEY to item)
-                        )
-                    }
+                    var expandedPopupMenu by rememberSaveable { mutableStateOf(false) }
+                    CardMusic(
+                        track = item,
+                        onPopupMenuAction = {
+                            expandedPopupMenu = !expandedPopupMenu
+                        },
+                        onPopupMenu = {
+                            SongPopupMenu(
+                                state = expandedPopupMenu,
+                                track = item,
+                                onChangeState = { expandedPopupMenu = false })
+                        }, onClick = {
+                            navController.navigate(
+                                route = ScreenState.DescriptionMusicScreen.route,
+                                bundleOf(DATA_KEY to item)
+                            )
+                        }
+                    )
                 }
             }
         }
